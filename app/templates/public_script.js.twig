@@ -1,0 +1,91 @@
+const fomoToast = function() {
+    const toastContainer = document.createElement('div');
+    toastContainer.className = 'toast-container';
+
+    const toastContent = document.createElement('div');
+    toastContent.className = 'toast-content';
+
+    const toastMessage = document.createElement('div');
+    toastMessage.className = 'toast-message';
+
+    toastContent.appendChild(toastMessage);
+    toastContainer.appendChild(toastContent);
+    document.body.appendChild(toastContainer);
+
+    const style = document.createElement('style');
+
+    style.innerHTML = `
+    .toast-container {
+      font-family: "{{ fontFamily }}";
+      position: fixed;
+      bottom: 20px;
+      left: 0;
+      z-index: 999;
+      background-color: {{ backgroundColor|raw }};
+      padding: 10px;
+    {% if cornerStyle == 'rounded' %}
+      border-radius: 5px;
+    {% endif %}
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      opacity: 0;
+      visibility: hidden;
+      max-width: calc(100% - 60px);
+      transition: opacity 0.5s, visibility 0.5s, left 0.5s;
+    }}
+
+    .toast-content {
+      display: flex;
+      align-items: center;
+    }
+
+    .toast-message {
+      margin: 0;
+      font-size: 14px;
+      color: rgba(255,255,255,0.7);
+    }
+
+    .toast-message span {
+      font-weight: bold;
+      color: {{ textColor|raw }};
+    }
+
+    .toast-container.toast-show {
+      visibility: visible;
+      opacity: 1;
+      left: 20px;
+    }
+
+    .toast-container.toast-hide {
+      visibility: hidden;
+      opacity: 0;
+    }
+  `;
+    document.head.appendChild(style);
+
+    const notifications = {{ orders|raw }};
+    let currentNotification = 0;
+
+    const displayDuration = {{ duration|raw }};
+    const initialDelay = {{ initialDelay|raw }};
+    const intervalDuration = {{ delay|raw }};
+
+    function showToast() {
+        if (currentNotification >= notifications.length) {
+            currentNotification = 0;
+        }
+        const { customerName, location, productTitle } = notifications[currentNotification];
+        toastMessage.innerHTML = `<span>${customerName}</span> from <span>${location}</span> just bought <span>${productTitle}</span>!`;
+        toastContainer.classList.add('toast-show');
+        setTimeout(hideToast, displayDuration);
+        currentNotification++;
+    }
+
+    function hideToast() {
+        toastContainer.classList.remove('toast-show');
+        setTimeout(showToast, intervalDuration);
+    }
+
+    setTimeout(showToast, initialDelay);
+};
+
+fomoToast();

@@ -1,0 +1,102 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <div class="container">
+        <h1>Welcome to <b>Fomo Toast</b> app</h1>
+
+        {% block form %}
+            <form action="/install" name="install" method="get">
+                <input type="text" name="shop" placeholder="neparodev.myshopify.com" required />
+                <input type="submit" value="Install" />
+            </form>
+        {% endblock %}
+
+        {% for message in app.flashes('error') %}
+            <div class="notice notice-error">
+                {{ message | raw }}
+            </div>
+        {% endfor %}
+
+        {% for message in app.flashes('success') %}
+            <div class="notice notice-success">
+                {{ message | raw }}
+            </div>
+        {% endfor %}
+
+        {% for message in app.flashes('info') %}
+            <div class="notice notice-info">
+                {{ message | raw }}
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const notice = document.querySelector('.notice')
+
+            if (notice) {
+                notice.addEventListener("click", () => {
+                    notice.style.opacity = "0";
+                    setTimeout(() => {
+                        notice.remove();
+                    }, 500);
+                });
+            }
+        });
+    </script>
+{% endblock %}
+
+{% block stylesheets %}
+    <style>
+        body {
+            background-color: #f1f2f4;
+            color: #1f2124;
+            font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+            font-size: 1rem;
+        }
+        .container {
+            width: 600px;
+            margin: 80px auto;
+        }
+        h1 {
+            margin-bottom: 1rem;
+        }
+        p, form, div {
+            margin-bottom: .6rem;
+        }
+        form input {
+            font-size: .9rem;
+            padding: .2rem .5rem;
+        }
+        form input[type="text"] {
+            width: 250px;
+        }
+        form input[type="submit"],
+        button {
+            cursor: pointer;
+        }
+        .notice {
+            border: 1px solid;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: .9rem;
+            padding: .2rem .5rem;
+            display: inline-block;
+            transition: opacity .2s;
+        }
+        .notice.notice-success {
+            background: #5fe361;
+            border-color: #4fc251;
+        }
+        .notice.notice-error {
+            background: #e55353;
+            border-color: #bc4545;
+        }
+        .notice.notice-info {
+            background: #97d8ff;
+            border-color: #599ec7;
+        }
+    </style>
+{% endblock %}

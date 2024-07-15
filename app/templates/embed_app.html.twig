@@ -1,5 +1,13 @@
 {% extends 'base.html.twig' %}
 
+{% block head %}
+    <meta name="shopify-api-key" content="{{ shopify_api_key }}" />
+    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+    <script>
+        window.INITIAL_DATA = {{ initial_data|json_encode|raw }};
+    </script>
+{% endblock %}
+
 {% block body %}
     <div id="root"></div>
 {% endblock %}
