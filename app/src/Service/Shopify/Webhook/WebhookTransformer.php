@@ -3,7 +3,6 @@
 namespace App\Service\Shopify\Webhook;
 
 use App\DTO\WebhookDTO;
-use App\Entity\Order;
 use App\Entity\Webhook;
 use Symfony\Component\Serializer\SerializerInterface;
 
@@ -30,20 +29,6 @@ class WebhookTransformer
             ];
 
             return $this->serializer->denormalize($webhookData, Webhook::class);
-
-        } catch (\Exception $e) {
-            throw $e;
-        }
-    }
-
-    public function transformContent(DTOInterface $dto)
-    {
-        try {
-            $webhookData = [
-                'id' => $dto->getId(),
-            ];
-
-            return $this->serializer->denormalize($webhookData, Order::class);
 
         } catch (\Exception $e) {
             throw $e;

@@ -16,10 +16,10 @@ const fomoToast = function() {
 
     style.innerHTML = `
     .toast-container {
-      font-family: "{{ fontFamily }}";
+      {% if fontFamily != 'default' %}font-family: "{{ fontFamily }}";{% endif %}
       position: fixed;
-      bottom: 20px;
-      left: 0;
+      {% if 'top' in position %}top{% else %}bottom{% endif %}: 20px;
+      {% if 'left' in position %}left{% else %}right{% endif %}: 0;
       z-index: 999;
       background-color: {{ backgroundColor|raw }};
       padding: 10px;
@@ -30,7 +30,7 @@ const fomoToast = function() {
       opacity: 0;
       visibility: hidden;
       max-width: calc(100% - 60px);
-      transition: opacity 0.5s, visibility 0.5s, left 0.5s;
+      transition: opacity 0.5s, visibility 0.5s, {% if 'left' in position %}left{% else %}right{% endif %} 0.5s;
     }}
 
     .toast-content {
@@ -44,7 +44,8 @@ const fomoToast = function() {
       color: rgba(255,255,255,0.7);
     }
 
-    .toast-message span {
+    .toast-message span,
+    .toast-message a {
       font-weight: bold;
       color: {{ textColor|raw }};
     }
@@ -52,7 +53,7 @@ const fomoToast = function() {
     .toast-container.toast-show {
       visibility: visible;
       opacity: 1;
-      left: 20px;
+      {% if 'left' in position %}left{% else %}right{% endif %}: 20px;
     }
 
     .toast-container.toast-hide {
@@ -62,30 +63,58 @@ const fomoToast = function() {
   `;
     document.head.appendChild(style);
 
-    const notifications = {{ orders|raw }};
-    let currentNotification = 0;
+    const orders = {{ orders|raw }};
+    let currentOrder = 0;
 
-    const displayDuration = {{ duration|raw }};
-    const initialDelay = {{ initialDelay|raw }};
-    const intervalDuration = {{ delay|raw }};
+    const scriptLoadDelay = performance.now();
+    const initialDelay = {{ initialDelay * 1000 }};
+    const totalInitialDelay = initialDelay < scriptLoadDelay ? 0 : scriptLoadDelay - initialDelay;
+    const delay = {{ delay * 1000 }};
+    const displayDuration = {{ duration * 1000 }};
+    const loop = {{ loopOrders }};
+    const shuffle = {{ shuffleOrders }};
+
+    if (orders.length === 0) {
+        return;
+    }
 
     function showToast() {
-        if (currentNotification >= notifications.length) {
-            currentNotification = 0;
+        if (shuffle) {
+            currentOrder = orders[getRandomInt(0, orders.length - 1)];
+        } else if (currentOrder >= orders.length) {
+            currentOrder = 0;
+
+            if (!loop) {
+                return;
+            }
         }
-        const { customerName, location, productTitle } = notifications[currentNotification];
-        toastMessage.innerHTML = `<span>${customerName}</span> from <span>${location}</span> just bought <span>${productTitle}</span>!`;
+
+        const { customerName, location, productTitle, productHandle, createdAtAgo } = orders[currentOrder];
+        toastMessage.innerHTML = `<span>${customerName}</span>`;
+
+        if (location) {
+            toastMessage.innerHTML += ` from <span>${location}</span>`;
+        }
+
+        toastMessage.innerHTML += ` ${createdAtAgo} <a href="/products/${productHandle}" target="_blank">${productTitle}</a>!`;
         toastContainer.classList.add('toast-show');
         setTimeout(hideToast, displayDuration);
-        currentNotification++;
+        currentOrder++;
     }
 
     function hideToast() {
         toastContainer.classList.remove('toast-show');
-        setTimeout(showToast, intervalDuration);
+        setTimeout(showToast, delay);
     }
 
-    setTimeout(showToast, initialDelay);
+    function getRandomInt(min, max) {
+        const minCeiled = Math.ceil(min);
+        const maxFloored = Math.floor(max);
+        return Math.floor(Math.random() * (maxFloored - minCeiled) + minCeiled); // The maximum is exclusive and the minimum is inclusive
+    }
+
+
+    setTimeout(showToast, totalInitialDelay);
 };
 
 fomoToast();

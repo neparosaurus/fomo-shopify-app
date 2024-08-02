@@ -1,0 +1,21 @@
+<script>console.log('initilized {{ shop.url }}')</script>
+
+{% comment %}<script>
+    if (document.querySelector('#rtpu-container')) {
+        let script = document.createElement("script");
+        script.src = "//nikola-shopify-app.loca.lt/s?store={{ request.host }}&template={{ template }}&tags={{ product.tags | join: ',' }}";
+
+        script.addEventListener('load', function () {
+            rtpuInit();
+        });
+
+        document.body.appendChild(script);
+    }
+</script>{% endcomment %}
+
+{% schema %}
+{
+  "name": "Fomo Toast App",
+  "target": "body"
+}
+{% endschema %}

@@ -63,17 +63,32 @@ export const refreshToken = async () => {
 
 export const getConfiguration = async () => {
     try {
-        const response = await apiClient.get('/api/configuration');
+        const response = await apiClient.get('/configuration');
         return response.data;
     } catch (error) {
         console.error("Error fetching configuration:", error);
     }
 };
 
-export const updateConfiguration = async () => {
+export const saveConfiguration = async (appEnabled, fontFamily, fontSize, backgroundColor, textColor, initialDelay, delay, duration, cornerStyle, position, thresholdType, thresholdMinutes, thresholdCount, loopOrders, shuffleOrders) => {
     try {
-        const response = await apiClient.post('/api/configuration');
-        return response.data;
+        return await apiClient.post('/configuration', {
+            appEnabled,
+            fontFamily,
+            fontSize,
+            backgroundColor,
+            textColor,
+            initialDelay,
+            delay,
+            duration,
+            cornerStyle,
+            position,
+            thresholdType,
+            thresholdMinutes,
+            thresholdCount,
+            loopOrders,
+            shuffleOrders,
+        });
     } catch (error) {
         console.error("Error updating configuration tag:", error);
     }

@@ -21,3 +21,25 @@
 ###< lexik/jwt-authentication-bundle ###
 
 /.idea
+
+###> extension ###
+# Environment Configuration
+/extension/.env
+/extension/.env.*
+
+# Dependency directory
+/extension/node_modules
+
+# Test coverage directory
+/extension/coverage
+
+# Ignore Apple macOS Desktop Services Store
+/extension/.DS_Store
+
+# Logs
+/extension/logs
+/extension/*.log
+
+# extensions build output
+/extension/extensions/*/build
+###< extension ###

@@ -3,6 +3,8 @@
 namespace App\DTO;
 
 use App\Entity\LineItem;
+use App\Service\GidService;
+use App\Service\Shopify\GraphQL\Product;
 use App\Service\Shopify\Webhook\DTOInterface;
 use DateTime;
 use Symfony\Component\HttpFoundation\Request;
@@ -13,17 +15,24 @@ class OrderDTO implements DTOInterface
     public string $customerName;
     public string $location;
     public string $productTitle;
+    public string $productHandle;
+    public string $createdAt;
+
     public function __construct(array $data)
     {
         $this->orderId = $data['id'] ?? 0;
         $this->customerName = $data['customer']['default_address']['name'] ?? "";
-        $this->location = $data['shipping_address']['city'] ?? "";
+        $this->location = $data['customer']['default_address']['city'] ?? "";
         $this->productTitle = $data['line_items'][0]['name'] ?? "";
+        $this->productHandle = $data['line_items'][0]['handle'] ?? "";
+        $this->createdAt = $data['created_at'] ?? "";
     }
 
     public static function fromRequest(Request $request): self
     {
         $decodedContent = json_decode($request->getContent(), true);
+        $productGid = 'gid://shopify/Product/'.$decodedContent['line_items'][0]['product_id'];
+        $decodedContent['line_items'][0]['handle'] = Product::getHandle($productGid)->getBody()['data']['product']['handle'];
 
         return new self($decodedContent);
     }
@@ -34,32 +43,21 @@ class OrderDTO implements DTOInterface
             'id' => self::getIdFromGid($node['id']),
             'order_number' => self::getOrderNumber($node['orderNumber']),
             'customer' => $node['customer'] ? [
-                'id' => self::getIdFromGid($node['customer']['id']),
-                'name' => $node['customer']['displayName']
+                'default_address' => [
+                    'name' => $node['customer']['displayName'],
+                    'city' => $node['displayAddress']['city'],
+                ]
             ] : [
-                'id' => "",
-                'name' => ""
+                'default_address' => [
+                    'name' => '',
+                    'city' => '',
+                ]
             ],
-            'total_price' => '0',
-            'financial_status' => strtolower($node['displayFinancialStatus']),
-            'currency' => $node['currencyCode'],
-            'updated_at' => $node['updatedAt'],
+            'created_at' => $node['processedAt'],
             'line_items' => array_map(function ($lineItem) {
                 return [
-                    'id' => self::getIdFromGid($lineItem['node']['id']),
                     'name' => $lineItem['node']['name'],
-                    'price' => $lineItem['node']['originalTotalSet']['presentmentMoney']['amount'],
-                    'quantity' => $lineItem['node']['quantity'],
-                    'sku' => $lineItem['node']['sku'],
-                    'total_discount' => $lineItem['node']['discountedTotalSet']['presentmentMoney']['amount'],
-                    'product_id' => self::getIdFromGid($lineItem['node']['product']['id']),
-                    'variant_id' => self::getIdFromGid($lineItem['node']['variant']['id']),
-                    'properties' => array_map(function ($property) {
-                        return [
-                            'name' => $property['key'],
-                            'value' => $property['value'],
-                        ];
-                    }, $lineItem['node']['customAttributes']),
+                    'handle' => $lineItem['node']['product']['handle'],
                 ];
             }, $node['lineItems']['edges']),
         ]);

@@ -6,6 +6,6 @@ class UrlService
 {
     public static function toUrl(string $path): string
     {
-        return $_ENV['SHOPIFY_API_KEY'].'/'.$path;
+        return 'https://'.$_ENV['SHOPIFY_HOST_NAME'].'/'.$path;
     }
 }

@@ -15,6 +15,8 @@ class OrderTransformer
         $order->setCustomerName($orderDTO->customerName);
         $order->setLocation($orderDTO->location);
         $order->setProductTitle($orderDTO->productTitle);
+        $order->setProductHandle($orderDTO->productHandle);
+        $order->setCreatedAt($orderDTO->createdAt);
         $order->setStore(Context::getStore());
 
         return $order;

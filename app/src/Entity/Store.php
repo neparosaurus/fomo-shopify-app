@@ -32,14 +32,14 @@ class Store implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @var Collection<int, Order>
      */
-    #[ORM\OneToMany(targetEntity: Order::class, mappedBy: 'Store')]
+    #[ORM\OneToMany(targetEntity: Order::class, mappedBy: 'store')]
     private Collection $orders;
 
     #[ORM\OneToOne(targetEntity: Configuration::class, mappedBy: 'store')]
     private ?Configuration $configuration = null;
 
     #[ORM\Column]
-    private ?bool $IsOrdersImported = false;
+    private ?bool $isEnabled = true;
 
     public function __construct()
     {
@@ -162,14 +162,14 @@ class Store implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function isOrdersImported(): ?bool
+    public function isEnabled(): ?bool
     {
-        return $this->IsOrdersImported;
+        return $this->isEnabled;
     }
 
-    public function setOrdersImported(bool $IsOrdersImported): static
+    public function setEnabled(bool $isEnabled): static
     {
-        $this->IsOrdersImported = $IsOrdersImported;
+        $this->isEnabled = $isEnabled;
 
         return $this;
     }

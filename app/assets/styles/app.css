@@ -1,3 +1,34 @@
+:root {
+    /*--p-font-size-350: 1em;
+    --p-font-size-325: 0.875rem;*/
+    --p-font-weight-semibold: 600;
+    --p-text-heading-3xl-font-size: var(--p-font-size-1000);
+}
 body {
     background-color: lightgray;
+    font-size: 0.875rem;
+}
+h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.5rem;
+}
+.Polaris-Text--headingMd {
+    font-size: var(--p-font-size-400);
+}
+.Polaris-RangeSlider-SingleThumb__Output {
+    display: none;
+}
+.Polaris-Text--bodyMd {
+
+}
+#corners-sharp + .Polaris-RadioButton__Backdrop,
+#corners-sharp + .Polaris-RadioButton__Backdrop:before {
+    border-radius: 0;
+}
+.Polaris-RangeSlider {
+    line-height: 220%;
+}
+.Polaris-Text--heading3xl {
+    line-height: 100%;
 }

@@ -83,7 +83,6 @@ class SSEController
             }
 
             $store = Context::getStore();
-            $store->setOrdersImported(true);
 
             $this->entityManager->persist($store);
             $this->entityManager->flush();

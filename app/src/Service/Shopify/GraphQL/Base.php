@@ -22,7 +22,5 @@ class Base
         };
 
         return Http::sendRequest($endpointUrl, Http::METHOD_POST, Http::generateOptions($body));
-
-//        return GraphQLDTO::transform($apiResponse);
     }
 }

@@ -5,6 +5,7 @@ namespace App\Entity;
 use AllowDynamicProperties;
 use App\Repository\ConfigurationRepository;
 use App\Service\Shopify\Context;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[AllowDynamicProperties] #[ORM\Entity(repositoryClass: ConfigurationRepository::class)]
@@ -16,7 +17,7 @@ class Configuration
     private ?int $id = null;
 
     #[ORM\Column(length: 64, nullable: true)]
-    private ?string $fontFamily = "Arial";
+    private ?string $fontFamily = "default";
 
     #[ORM\Column(nullable: true)]
     private ?array $backgroundColor = [
@@ -29,26 +30,51 @@ class Configuration
     #[ORM\Column(nullable: true)]
     private ?array $textColor = [
         "alpha" => 1,
-        "brightness" => 100,
+        "brightness" => 1,
         "hue" => 0,
         "saturation" => 0
     ];
 
     #[ORM\Column]
-    private ?int $initialDelay = 5000;
+    private ?int $initialDelay = 5;
 
     #[ORM\Column]
-    private ?int $delay = 5000;
+    private ?int $delay = 5;
 
     #[ORM\Column]
-    private ?int $duration = 5000;
+    private ?int $duration = 5;
 
     #[ORM\Column(length: 7)]
     private ?string $cornerStyle = "rounded";
 
+    #[ORM\Column(length: 12)]
+    private ?string $position = "bottom-left";
+
     #[ORM\OneToOne(targetEntity: Store::class, inversedBy: "configuration")]
     #[ORM\JoinColumn(name: 'store_id', referencedColumnName: 'id')]
     private ?Store $store = null;
+
+    /*
+     * 0 - Use minutes
+     * 1 - Use count
+     */
+    #[ORM\Column(type: Types::SMALLINT)]
+    private ?int $thresholdType = 1;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $thresholdMinutes = 0;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $thresholdCount = 10;
+
+    #[ORM\Column]
+    private ?bool $loopOrders = true;
+
+    #[ORM\Column(length: 4)]
+    private ?string $fontSize = "100";
+
+    #[ORM\Column]
+    private ?bool $shuffleOrders = false;
 
     public function __construct()
     {
@@ -152,6 +178,90 @@ class Configuration
     public function setStore(Store $store): static
     {
         $this->store = $store;
+
+        return $this;
+    }
+
+    public function getPosition(): ?string
+    {
+        return $this->position;
+    }
+
+    public function setPosition(string $position): static
+    {
+        $this->position = $position;
+
+        return $this;
+    }
+
+    public function getThresholdType(): ?int
+    {
+        return $this->thresholdType;
+    }
+
+    public function setThresholdType(int $thresholdType): static
+    {
+        $this->thresholdType = $thresholdType;
+
+        return $this;
+    }
+
+    public function getThresholdMinutes(): ?int
+    {
+        return $this->thresholdMinutes;
+    }
+
+    public function setThresholdMinutes(?int $thresholdMinutes): static
+    {
+        $this->thresholdMinutes = $thresholdMinutes;
+
+        return $this;
+    }
+
+    public function getThresholdCount(): ?int
+    {
+        return $this->thresholdCount;
+    }
+
+    public function setThresholdCount(?int $thresholdCount): static
+    {
+        $this->thresholdCount = $thresholdCount;
+
+        return $this;
+    }
+
+    public function isLoopOrders(): ?bool
+    {
+        return $this->loopOrders;
+    }
+
+    public function setLoopOrders(bool $loopOrders): static
+    {
+        $this->loopOrders = $loopOrders;
+
+        return $this;
+    }
+
+    public function getFontSize(): ?string
+    {
+        return $this->fontSize;
+    }
+
+    public function setFontSize(string $fontSize): static
+    {
+        $this->fontSize = $fontSize;
+
+        return $this;
+    }
+
+    public function isShuffleOrders(): ?bool
+    {
+        return $this->shuffleOrders;
+    }
+
+    public function setShuffleOrders(bool $shuffleOrders): static
+    {
+        $this->shuffleOrders = $shuffleOrders;
 
         return $this;
     }

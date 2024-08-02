@@ -3,8 +3,10 @@
 namespace App\Controller;
 
 use App\Entity\Store;
+use App\Repository\OrderRepository;
 use App\Repository\StoreRepository;
 use App\Service\ColorService;
+use App\Service\Shopify\Context;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,11 +17,13 @@ use Symfony\Component\Serializer\SerializerInterface;
 class ScriptController extends AbstractController
 {
     private StoreRepository $storeRepository;
+    private OrderRepository $orderRepository;
     private SerializerInterface $serializer;
 
-    public function __construct(StoreRepository $storeRepository, SerializerInterface $serializer)
+    public function __construct(StoreRepository $storeRepository, OrderRepository $orderRepository, SerializerInterface $serializer)
     {
         $this->storeRepository = $storeRepository;
+        $this->orderRepository = $orderRepository;
         $this->serializer = $serializer;
     }
 
@@ -39,8 +43,14 @@ class ScriptController extends AbstractController
             return new Response("No store found", 204, ["Content-Type" => "application/javascript"]);
         }
 
-        $orders = $storeDb->getOrders();
         $configuration = $storeDb->getConfiguration();
+        $orders = [];
+
+        if ($configuration->getThresholdType() === 0) {
+            $orders = $this->orderRepository->getWithMinutesLimit($storeDb, $configuration->getThresholdMinutes());
+        } else if ($configuration->getThresholdType() === 1) {
+            $orders = $this->orderRepository->getWithOrdersLimit($storeDb, $configuration->getThresholdCount());
+        }
 
         $jsonOrders = $this->serializer->serialize($orders, 'json', [
             AbstractNormalizer::GROUPS => ['order']
@@ -52,10 +62,13 @@ class ScriptController extends AbstractController
                 "fontFamily" => $configuration->getFontFamily(),
                 "backgroundColor" => ColorService::hsbToRgba($configuration->getBackgroundColor()),
                 "textColor" => ColorService::hsbToRgba($configuration->getTextColor()),
-                "cornerStyle" => $configuration->getCornerStyle(),
-                "duration" => $configuration->getDuration(),
                 "initialDelay" => $configuration->getInitialDelay(),
                 "delay" => $configuration->getDelay(),
+                "duration" => $configuration->getDuration(),
+                "cornerStyle" => $configuration->getCornerStyle(),
+                "position" => $configuration->getPosition(),
+                'loopOrders' => $configuration->isLoopOrders(),
+                'shuffleOrders' => $configuration->isShuffleOrders(),
             ]),
             200,
             ["Content-Type" => "application/javascript"]

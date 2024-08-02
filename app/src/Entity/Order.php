@@ -31,10 +31,17 @@ class Order
     #[Groups(['order'])]
     private ?string $productTitle = null;
 
+    #[ORM\Column(length: 255)]
+    #[Groups(['order'])]
+    private ?string $productHandle = null;
+
     #[ORM\ManyToOne(inversedBy: 'orders')]
     #[ORM\JoinColumn(nullable: false)]
     #[Groups(['order'])]
-    private ?Store $Store = null;
+    private ?Store $store = null;
+
+    #[ORM\Column]
+    private ?\DateTimeImmutable $createdAt = null;
 
     public function getId(): ?int
     {
@@ -83,13 +90,67 @@ class Order
 
     public function getStore(): ?Store
     {
-        return $this->Store;
+        return $this->store;
     }
 
-    public function setStore(?Store $Store): static
+    public function setStore(?Store $store): static
     {
-        $this->Store = $Store;
+        $this->store = $store;
 
         return $this;
+    }
+
+    public function getProductHandle(): ?string
+    {
+        return $this->productHandle;
+    }
+
+    public function setProductHandle(string $productHandle): static
+    {
+        $this->productHandle = $productHandle;
+
+        return $this;
+    }
+
+    public function getCreatedAt(): ?\DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function setCreatedAt(\DateTimeImmutable|string $createdAt): void
+    {
+        if (is_string($createdAt)) {
+            $createdAt = new \DateTimeImmutable($createdAt);
+        }
+
+        $this->createdAt = $createdAt;
+    }
+
+    #[Groups(['order'])]
+    public function getCreatedAtAgo()
+    {
+        $now = new \DateTimeImmutable();
+        $interval = $now->diff($this->createdAt);
+        $boughtAt = 'bought ';
+
+        if ($interval->y > 0) {
+            $boughtAt .= $interval->y . ' year' . ($interval->y > 1 ? 's' : '') . ' ago';
+        }
+        elseif ($interval->m > 0) {
+            $boughtAt .= $interval->m . ' month' . ($interval->m > 1 ? 's' : '') . ' ago';
+        }
+        elseif ($interval->d > 0) {
+            $boughtAt .= $interval->d . ' day' . ($interval->d > 1 ? 's' : '') . ' ago';
+        /*}
+        elseif ($interval->h > 0) {
+            $boughtAt .= $interval->h . ' hour' . ($interval->h > 1 ? 's' : '') . ' ago';
+        }
+        elseif ($interval->i > 0) {
+            $boughtAt .= $interval->i . ' minute' . ($interval->i > 1 ? 's' : '') . ' ago';*/
+        } else {
+            $boughtAt = 'just bought';
+        }
+
+        return $boughtAt;
     }
 }

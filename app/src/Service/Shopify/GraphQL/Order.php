@@ -21,39 +21,19 @@ class Order extends Base
                 node {
                   id
                   orderNumber: name
+                  processedAt
+                  displayAddress {
+                    city
+                  }
                   customer {
-                    id
                     displayName
                   }
-                  currencyCode
-                  displayFinancialStatus
-                  updatedAt
-                  lineItems(first: 100) {
+                  lineItems(first: 1) {
                     edges {
                       node {
-                        id
-                        name
-                        sku
-                        quantity
-                        originalTotalSet {
-                          presentmentMoney {
-                            amount
-                          }
-                        }
-                        discountedTotalSet {
-                          presentmentMoney {
-                            amount
-                          }
-                        }
-                        customAttributes {
-                          key
-                          value
-                        }
+                        name,
                         product {
-                          id
-                        }
-                        variant {
-                          id
+                          handle
                         }
                       }
                     }

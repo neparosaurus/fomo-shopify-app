@@ -2,14 +2,19 @@
 
 namespace App\Controller;
 
+use App\DTO\OrderDTO;
 use App\Entity\Configuration;
+use App\Entity\Order as OrderEntity;
 use App\Entity\Store;
 use App\Repository\ConfigurationRepository;
+use App\Repository\OrderRepository;
 use App\Repository\StoreRepository;
 use App\Service\Shopify\Auth;
 use App\Service\Shopify\Context;
+use App\Service\Shopify\GraphQL\Order;
 use App\Service\Shopify\GraphQL\Webhook;
 use App\Service\UrlService;
+use App\Transformer\OrderTransformer;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -20,9 +25,12 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class IndexController extends AbstractController
 {
-    public function __construct()
+    private EntityManagerInterface $entityManager;
+
+    public function __construct(EntityManagerInterface $entityManager)
     {
         Context::initialize();
+        $this->entityManager = $entityManager;
     }
 
     #[Route('/{reactRouting}',
@@ -31,7 +39,7 @@ class IndexController extends AbstractController
             'reactRouting' => "^(?!api|_(profiler|wdt)|script|install|auth/callback|webhook)(sse/.*)?$",
         ],
     )]
-    public function index(Request $request, StoreRepository $storeRepository, ConfigurationRepository $configurationRepository): Response
+    public function index(Request $request, StoreRepository $storeRepository, ConfigurationRepository $configurationRepository, OrderRepository $orderRepository): Response
     {
         if (!Auth::isRequestVerified($request) || !Auth::authorizeStore($request, $storeRepository)) {
             return $this->redirectToRoute('app_install');
@@ -43,17 +51,37 @@ class IndexController extends AbstractController
             'store' => $store
         ]);
 
+        $ordersShowing = [];
+
+        if ($configuration->getThresholdType() === 0) {
+            $ordersShowing = $orderRepository->getWithMinutesLimit(Context::getStore(), $configuration->getThresholdMinutes());
+        } else if ($configuration->getThresholdType() === 1) {
+            $ordersShowing = $orderRepository->getWithOrdersLimit(Context::getStore(), $configuration->getThresholdCount());
+        }
+
+        $ordersLength = sizeof($store->getOrders());
+        $ordersShowingLength = sizeof($ordersShowing);
+
         return $this->render('embed_app.html.twig', [
             'shopify_api_key' => $_ENV['SHOPIFY_API_KEY'],
             'initial_data' => [
-                'is_orders_imported' => $store->isOrdersImported(),
-                'font_family' => $configuration->getFontFamily(),
-                'background_color' => $configuration->getBackgroundColor(),
-                'text_color' => $configuration->getTextColor(),
-                'initial_delay' => $configuration->getInitialDelay(),
+                'ordersLength' => $ordersLength,
+                'ordersShowingLength' => $ordersShowingLength,
+                'appEnabled' => $store->isEnabled(),
+                'fontFamily' => $configuration->getFontFamily(),
+                'fontSize' => $configuration->getFontSize(),
+                'backgroundColor' => $configuration->getBackgroundColor(),
+                'textColor' => $configuration->getTextColor(),
+                'initialDelay' => $configuration->getInitialDelay(),
                 'delay' => $configuration->getDelay(),
                 'duration' => $configuration->getDuration(),
-                'corner_style' => $configuration->getCornerStyle(),
+                'cornerStyle' => $configuration->getCornerStyle(),
+                'position' => $configuration->getPosition(),
+                'thresholdType' => $configuration->getThresholdType(),
+                'thresholdMinutes' => $configuration->getThresholdMinutes(),
+                'thresholdCount' => $configuration->getThresholdCount(),
+                'loopOrders' => $configuration->isLoopOrders(),
+                'shuffleOrders' => $configuration->isShuffleOrders(),
             ],
         ]);
     }
@@ -139,9 +167,29 @@ class IndexController extends AbstractController
             UrlService::toUrl('webhook'),
         );
 
+        $this->importOrders();
+
         $this->addFlash("success", "App successfully installed to <b>{$store->getHost()}</b>");
         return $this->redirectToRoute('app_index', [
             'reactRouting' => ''
         ]);
+    }
+
+    private function importOrders(): void
+    {
+        $apiData = Order::get(50)->getBody();
+        $ordersData = $apiData['data']['orders'];
+        $transformer = new OrderTransformer();
+        $orderRepository = $this->entityManager->getRepository(OrderEntity::class);
+
+        /** @var OrderEntity[] $orders */
+        $orders = array_reduce($ordersData['edges'], function ($carry, $node) use ($orderRepository, $transformer) {
+            $orderDTO = OrderDTO::fromGraphQLResponse($node['node']);
+            $order = $transformer->transformToEntity($orderDTO);
+
+            $this->entityManager->persist($order);
+        });
+
+        $this->entityManager->flush();
     }
 }
