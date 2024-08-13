@@ -1,0 +1,22 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "8f7cc4c775639b70febadd062a6b6deb"
+name = "Dewoid Toast"
+handle = "dewoid-toast"
+application_url = "https://toast.dewoid.com/"
+embedded = true
+
+[build]
+include_config_on_deploy = true
+
+[auth]
+redirect_urls = [
+  "https://toast.dewoid.com/install",
+  "https://toast.dewoid.com/auth/callback"
+]
+
+[webhooks]
+api_version = "2024-07"
+
+[pos]
+embedded = false

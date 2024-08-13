@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\SerializerInterface;
 
 #[Route('/api')]
@@ -34,30 +35,37 @@ class ConfigurationController
             return new JsonResponse(['error' => 'Invalid JSON'], Response::HTTP_BAD_REQUEST);
         }
 
-        $newConfiguration = $serializer->deserialize($request->getContent(), Configuration::class, 'json');
-        $store = Context::getStore();
-        $configuration = $store->getConfiguration();
-        $configuration->setFontFamily($newConfiguration->getFontFamily());
-        $configuration->setBackgroundColor($newConfiguration->getBackgroundColor());
-        $configuration->setTextColor($newConfiguration->getTextColor());
-        $configuration->setInitialDelay($newConfiguration->getInitialDelay());
-        $configuration->setDelay($newConfiguration->getDelay());
-        $configuration->setDuration($newConfiguration->getDuration());
-        $configuration->setCornerStyle($newConfiguration->getCornerStyle());
-        $configuration->setPosition($newConfiguration->getPosition());
-        $configuration->setThresholdType($newConfiguration->getThresholdType());
-        $configuration->setThresholdMinutes($newConfiguration->getThresholdMinutes());
-        $configuration->setThresholdCount($newConfiguration->getThresholdCount());
+        $jsonContent = $request->getContent();
 
-        $this->entityManager->persist($configuration);
+        $newConfiguration = $serializer->deserialize($jsonContent, Configuration::class, 'json');
+        $store = Context::getStore();
+        $configurationDb = $store->getConfiguration();
+        $configurationDb->setFontFamily($newConfiguration->getFontFamily());
+        $configurationDb->setBackgroundColor($newConfiguration->getBackgroundColor());
+        $configurationDb->setTextColor($newConfiguration->getTextColor());
+        $configurationDb->setInitialDelay($newConfiguration->getInitialDelay());
+        $configurationDb->setDelay($newConfiguration->getDelay());
+        $configurationDb->setDuration($newConfiguration->getDuration());
+        $configurationDb->setCornerStyle($newConfiguration->getCornerStyle());
+        $configurationDb->setPosition($newConfiguration->getPosition());
+        $configurationDb->setThresholdType($newConfiguration->getThresholdType());
+        $configurationDb->setThresholdMinutes($newConfiguration->getThresholdMinutes());
+        $configurationDb->setThresholdCount($newConfiguration->getThresholdCount());
+        $configurationDb->setLoopOrders($newConfiguration->isLoopOrders());
+        $configurationDb->setShuffleOrders($newConfiguration->isShuffleOrders());
+        $configurationDb->setHideTimeInOrders($newConfiguration->isHideTimeInOrders());
+        $configurationDb->setShowThumbnail($newConfiguration->isShowThumbnail());
+        $configurationDb->setThumbnailPosition($newConfiguration->getThumbnailPosition());
+
+        $this->entityManager->persist($configurationDb);
         $this->entityManager->flush();
 
         $ordersShowing = [];
 
-        if ($configuration->getThresholdType() === 0) {
-            $ordersShowing = $orderRepository->getWithMinutesLimit($store, $configuration->getThresholdMinutes());
-        } else if ($configuration->getThresholdType() === 1) {
-            $ordersShowing = $orderRepository->getWithOrdersLimit($store, $configuration->getThresholdCount());
+        if ($configurationDb->getThresholdType() === 0) {
+            $ordersShowing = $orderRepository->getWithMinutesLimit($store, $configurationDb->getThresholdMinutes());
+        } else if ($configurationDb->getThresholdType() === 1) {
+            $ordersShowing = $orderRepository->getWithOrdersLimit($store, $configurationDb->getThresholdCount());
         }
 
         $ordersLength = sizeof($store->getOrders());
@@ -67,22 +75,26 @@ class ConfigurationController
             'ordersLength' => $ordersLength,
             'ordersShowingLength' => $ordersShowingLength,
             'appEnabled' => $store->isEnabled(),
-            'fontFamily' => $configuration->getFontFamily(),
-            'fontSize' => $configuration->getFontSize(),
-            'backgroundColor' => $configuration->getBackgroundColor(),
-            'textColor' => $configuration->getTextColor(),
-            'initialDelay' => $configuration->getInitialDelay(),
-            'delay' => $configuration->getDelay(),
-            'duration' => $configuration->getDuration(),
-            'cornerStyle' => $configuration->getCornerStyle(),
-            'position' => $configuration->getPosition(),
-            'thresholdType' => $configuration->getThresholdType(),
-            'thresholdMinutes' => $configuration->getThresholdMinutes(),
-            'thresholdCount' => $configuration->getThresholdCount(),
-            'loopOrders' => $configuration->isLoopOrders(),
-            'shuffleOrders' => $configuration->isShuffleOrders(),
+            'fontFamily' => $configurationDb->getFontFamily(),
+            'fontSize' => $configurationDb->getFontSize(),
+            'backgroundColor' => $configurationDb->getBackgroundColor(),
+            'textColor' => $configurationDb->getTextColor(),
+            'initialDelay' => $configurationDb->getInitialDelay(),
+            'delay' => $configurationDb->getDelay(),
+            'duration' => $configurationDb->getDuration(),
+            'cornerStyle' => $configurationDb->getCornerStyle(),
+            'position' => $configurationDb->getPosition(),
+            'thresholdType' => $configurationDb->getThresholdType(),
+            'thresholdMinutes' => $configurationDb->getThresholdMinutes(),
+            'thresholdCount' => $configurationDb->getThresholdCount(),
+            'loopOrders' => $configurationDb->isLoopOrders(),
+            'shuffleOrders' => $configurationDb->isShuffleOrders(),
+            'hideTime' => $configurationDb->isHideTimeInOrders(),
+            'showThumbnail' => $configurationDb->isShowThumbnail(),
+            'thumbnailPosition' => $configurationDb->getThumbnailPosition(),
         ];
 
-        return new JsonResponse(json_encode($data), Response::HTTP_OK, [], true);
+//        return new JsonResponse($data, Response::HTTP_OK, [], true);
+        return new JsonResponse(json_encode($data, true), Response::HTTP_OK, [], true);
     }
 }

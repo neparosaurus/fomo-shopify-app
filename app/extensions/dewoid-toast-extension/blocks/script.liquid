@@ -1,0 +1,19 @@
+{% assign date = "now" | date: "%Y-%m-%d-%H" %}
+{% assign key = request.host | append: date %}
+{% assign csrf = key | md5 %}
+
+<script>
+  window.dewoidToast = {
+      host: "{{ request.host }}",
+      csrf: "{{ csrf }}",
+  };
+</script>
+
+{% schema %}
+{
+  "name": "Dewoid Toast",
+  "target": "body",
+  "stylesheet": "dewoid-toast.css",
+  "javascript": "dewoid-toast.js"
+}
+{% endschema %}

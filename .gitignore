@@ -3,6 +3,7 @@
 /app/.env.local
 /app/.env.local.php
 /app/.env.*.local
+/app/.env.dewoid-toast
 /app/config/secrets/prod/prod.decrypt.private.php
 /app/public/bundles/
 /app/var/
@@ -21,6 +22,8 @@
 ###< lexik/jwt-authentication-bundle ###
 
 /.idea
+/.env
+/TODO.md
 
 ###> extension ###
 # Environment Configuration

@@ -70,7 +70,26 @@ export const getConfiguration = async () => {
     }
 };
 
-export const saveConfiguration = async (appEnabled, fontFamily, fontSize, backgroundColor, textColor, initialDelay, delay, duration, cornerStyle, position, thresholdType, thresholdMinutes, thresholdCount, loopOrders, shuffleOrders) => {
+export const saveConfiguration = async (
+    appEnabled,
+    fontFamily,
+    fontSize,
+    backgroundColor,
+    textColor,
+    initialDelay,
+    delay,
+    duration,
+    cornerStyle,
+    position,
+    thresholdType,
+    thresholdMinutes,
+    thresholdCount,
+    loopOrders,
+    shuffleOrders,
+    hideTimeInOrders,
+    showThumbnail,
+    thumbnailPosition,
+) => {
     try {
         return await apiClient.post('/configuration', {
             appEnabled,
@@ -88,6 +107,9 @@ export const saveConfiguration = async (appEnabled, fontFamily, fontSize, backgr
             thresholdCount,
             loopOrders,
             shuffleOrders,
+            hideTimeInOrders,
+            showThumbnail,
+            thumbnailPosition,
         });
     } catch (error) {
         console.error("Error updating configuration tag:", error);

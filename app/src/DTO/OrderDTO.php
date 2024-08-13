@@ -16,6 +16,7 @@ class OrderDTO implements DTOInterface
     public string $location;
     public string $productTitle;
     public string $productHandle;
+    public string $productImage;
     public string $createdAt;
 
     public function __construct(array $data)
@@ -25,6 +26,7 @@ class OrderDTO implements DTOInterface
         $this->location = $data['customer']['default_address']['city'] ?? "";
         $this->productTitle = $data['line_items'][0]['name'] ?? "";
         $this->productHandle = $data['line_items'][0]['handle'] ?? "";
+        $this->productImage = $data['line_items'][0]['featuredImage'] ?? "";
         $this->createdAt = $data['created_at'] ?? "";
     }
 
@@ -58,6 +60,7 @@ class OrderDTO implements DTOInterface
                 return [
                     'name' => $lineItem['node']['name'],
                     'handle' => $lineItem['node']['product']['handle'],
+                    'featuredImage' => $lineItem['node']['product']['featuredImage']['url'],
                 ];
             }, $node['lineItems']['edges']),
         ]);

@@ -36,7 +36,7 @@ class IndexController extends AbstractController
     #[Route('/{reactRouting}',
         name: 'app_index',
         requirements: [
-            'reactRouting' => "^(?!api|_(profiler|wdt)|script|install|auth/callback|webhook)(sse/.*)?$",
+            'reactRouting' => "^(?!api|_(profiler|wdt)|script|c|install|auth/callback|webhook)(sse/.*)?$",
         ],
     )]
     public function index(Request $request, StoreRepository $storeRepository, ConfigurationRepository $configurationRepository, OrderRepository $orderRepository): Response
@@ -82,6 +82,9 @@ class IndexController extends AbstractController
                 'thresholdCount' => $configuration->getThresholdCount(),
                 'loopOrders' => $configuration->isLoopOrders(),
                 'shuffleOrders' => $configuration->isShuffleOrders(),
+                'hideTimeInOrders' => $configuration->isHideTimeInOrders(),
+                'showThumbnail' => $configuration->isShowThumbnail(),
+                'thumbnailPosition' => $configuration->getThumbnailPosition(),
             ],
         ]);
     }
@@ -178,6 +181,11 @@ class IndexController extends AbstractController
     private function importOrders(): void
     {
         $apiData = Order::get(50)->getBody();
+
+        if (!isset($apiData['data']) || !isset($apiData['data']['orders'])) {
+            return;
+        }
+
         $ordersData = $apiData['data']['orders'];
         $transformer = new OrderTransformer();
         $orderRepository = $this->entityManager->getRepository(OrderEntity::class);

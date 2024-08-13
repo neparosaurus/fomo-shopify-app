@@ -76,6 +76,15 @@ class Configuration
     #[ORM\Column]
     private ?bool $shuffleOrders = false;
 
+    #[ORM\Column]
+    private ?bool $hideTimeInOrders = false;
+
+    #[ORM\Column]
+    private ?bool $showThumbnail = false;
+
+    #[ORM\Column(length: 5, nullable: true)]
+    private ?string $thumbnailPosition = "right";
+
     public function __construct()
     {
         $this->store = Context::getStore();
@@ -262,6 +271,42 @@ class Configuration
     public function setShuffleOrders(bool $shuffleOrders): static
     {
         $this->shuffleOrders = $shuffleOrders;
+
+        return $this;
+    }
+
+    public function isHideTimeInOrders(): ?bool
+    {
+        return $this->hideTimeInOrders;
+    }
+
+    public function setHideTimeInOrders(bool $hideTimeInOrders): static
+    {
+        $this->hideTimeInOrders = $hideTimeInOrders;
+
+        return $this;
+    }
+
+    public function isShowThumbnail(): ?bool
+    {
+        return $this->showThumbnail;
+    }
+
+    public function setShowThumbnail(bool $showThumbnail): static
+    {
+        $this->showThumbnail = $showThumbnail;
+
+        return $this;
+    }
+
+    public function getThumbnailPosition(): ?string
+    {
+        return $this->thumbnailPosition;
+    }
+
+    public function setThumbnailPosition(?string $thumbnailPosition): static
+    {
+        $this->thumbnailPosition = $thumbnailPosition;
 
         return $this;
     }

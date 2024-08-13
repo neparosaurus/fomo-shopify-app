@@ -43,6 +43,10 @@ class Order
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['order'])]
+    private ?string $productImage = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -141,10 +145,10 @@ class Order
         }
         elseif ($interval->d > 0) {
             $boughtAt .= $interval->d . ' day' . ($interval->d > 1 ? 's' : '') . ' ago';
-        /*}
+        }
         elseif ($interval->h > 0) {
             $boughtAt .= $interval->h . ' hour' . ($interval->h > 1 ? 's' : '') . ' ago';
-        }
+        /*}
         elseif ($interval->i > 0) {
             $boughtAt .= $interval->i . ' minute' . ($interval->i > 1 ? 's' : '') . ' ago';*/
         } else {
@@ -152,5 +156,17 @@ class Order
         }
 
         return $boughtAt;
+    }
+
+    public function getProductImage(): ?string
+    {
+        return $this->productImage;
+    }
+
+    public function setProductImage(?string $productImage): static
+    {
+        $this->productImage = $productImage;
+
+        return $this;
     }
 }

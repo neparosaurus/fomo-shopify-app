@@ -32,3 +32,6 @@ h2 {
 .Polaris-Text--heading3xl {
     line-height: 100%;
 }
+.Polaris-Select__Content {
+    width: auto;
+}

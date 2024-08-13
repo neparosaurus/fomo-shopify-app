@@ -76,6 +76,8 @@ class Orders extends Base implements WebhookHandlerInterface
                 'customerName' => $dto->customerName,
                 'location' => $dto->location,
                 'productTitle' => $dto->productTitle,
+                'productHandle' => $dto->productHandle,
+                'productImage' => $dto->productImage,
             ];
 
             return $this->serializer->denormalize($orderData, Order::class, null, $context);

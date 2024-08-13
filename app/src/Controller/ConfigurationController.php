@@ -6,7 +6,8 @@ use App\Entity\Store;
 use App\Repository\OrderRepository;
 use App\Repository\StoreRepository;
 use App\Service\ColorService;
-use App\Service\Shopify\Context;
+use DateTime;
+use DateTimeZone;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -15,7 +16,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\SerializerInterface;
 
-class ScriptController extends AbstractController
+class ConfigurationController extends AbstractController
 {
     private StoreRepository $storeRepository;
     private OrderRepository $orderRepository;
@@ -28,8 +29,8 @@ class ScriptController extends AbstractController
         $this->serializer = $serializer;
     }
 
-    #[Route('/public/script.js', name: 'public_script')]
-    public function script(Request $request): Response
+    #[Route('/public/data.json', name: 'config_json', methods: ['GET'])]
+    public function index(Request $request)
     {
         $store = $request->query->get("store");
         $csrf = $request->query->get("csrf");
@@ -45,21 +46,25 @@ class ScriptController extends AbstractController
             return new JsonResponse(["error" => "No store found"], Response::HTTP_BAD_REQUEST, []);
         }
 
-        $now = date("Y-m-d-H");
-        $key = $storeDb->getHost().$now;
-        $localCsrf = md5($key);
 
-        if ($csrf !== $localCsrf) {
-            // Check for hours overlap
-            $dateTime = new DateTime();
-            $dateTime->modify('-1 hour');
-            $now = $dateTime->format("Y-m-d-H");
+        $timezones = DateTimeZone::listIdentifiers();
+        $csrfPass = false;
+
+        foreach ($timezones as $timezone) {
+            $localDate = new DateTime('now', new DateTimeZone($timezone));
+            $now = $localDate->format('Y-m-d-H');
             $key = $storeDb->getHost().$now;
             $localCsrf = md5($key);
 
-            if ($csrf !== $localCsrf) {
-                return new JsonResponse(["error" => "Csrf token mismatch"], Response::HTTP_BAD_REQUEST, []);
+            if ($localCsrf === $csrf) {
+                $csrfPass = true;
             }
+        }
+
+        if (!$csrfPass) {
+            return new JsonResponse([
+                "error" => "Csrf token mismatch",
+            ], Response::HTTP_BAD_REQUEST, []);
         }
 
         $configuration = $storeDb->getConfiguration();
@@ -92,57 +97,12 @@ class ScriptController extends AbstractController
             'thumbnailPosition' => $configuration->getThumbnailPosition(),
         ];
 
-        return new Response(
-            $this->renderView("public_script.js.twig", $data),
-            200,
-            ["Content-Type" => "application/javascript"]
-        );
-    }
+        $response = new JsonResponse($data, Response::HTTP_OK, []);
 
-    #[Route('/public/data.json', name: 'public_json')]
-    public function jsonOutput(Request $request): JsonResponse
-    {
-        $store = $request->query->get("store");
+        $response->headers->set('Access-Control-Allow-Origin', '*');
+        $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+        $response->headers->set('Access-Control-Allow-Headers', 'Origin, Content-Type, X-Auth-Token, Authorization');
 
-        if (!$store) {
-            return new JsonResponse(json_encode(["error" => "No store request"]), Response::HTTP_BAD_REQUEST, [], true);
-        }
-
-        /** @var Store $storeDb */
-        $storeDb = $this->storeRepository->getByHost($store);
-
-        if (!$storeDb) {
-            return new JsonResponse(json_encode(["error" => "No store found"]), Response::HTTP_BAD_REQUEST, [], true);
-        }
-
-        $configuration = $storeDb->getConfiguration();
-        $orders = [];
-
-        if ($configuration->getThresholdType() === 0) {
-            $orders = $this->orderRepository->getWithMinutesLimit($storeDb, $configuration->getThresholdMinutes());
-        } else if ($configuration->getThresholdType() === 1) {
-            $orders = $this->orderRepository->getWithOrdersLimit($storeDb, $configuration->getThresholdCount());
-        }
-
-        $jsonOrders = $this->serializer->serialize($orders, 'json', [
-            AbstractNormalizer::GROUPS => ['order']
-        ]);
-
-        $data = [
-            "orders" => $jsonOrders,
-            "fontFamily" => $configuration->getFontFamily(),
-            "backgroundColor" => ColorService::hsbToRgba($configuration->getBackgroundColor()),
-            "textColor" => ColorService::hsbToRgba($configuration->getTextColor()),
-            "initialDelay" => $configuration->getInitialDelay(),
-            "delay" => $configuration->getDelay(),
-            "duration" => $configuration->getDuration(),
-            "cornerStyle" => $configuration->getCornerStyle(),
-            "position" => $configuration->getPosition(),
-            'loopOrders' => $configuration->isLoopOrders(),
-            'shuffleOrders' => $configuration->isShuffleOrders(),
-            'hideTime' => $configuration->isHideTimeInOrders(),
-        ];
-
-        return new JsonResponse(json_encode($data, true), Response::HTTP_OK, [], true);
+        return $response;
     }
 }

@@ -1,4 +1,4 @@
-const fomoToast = function() {
+const dewoidToast = function() {
     const toastContainer = document.createElement('div');
     toastContainer.className = 'toast-container';
 
@@ -73,6 +73,7 @@ const fomoToast = function() {
     const displayDuration = {{ duration * 1000 }};
     const loop = {{ loopOrders }};
     const shuffle = {{ shuffleOrders }};
+    const hideTime = {{ hideTimeInOrders }};
 
     if (orders.length === 0) {
         return;
@@ -96,7 +97,9 @@ const fomoToast = function() {
             toastMessage.innerHTML += ` from <span>${location}</span>`;
         }
 
-        toastMessage.innerHTML += ` ${createdAtAgo} <a href="/products/${productHandle}" target="_blank">${productTitle}</a>!`;
+        hideTime ? toastMessage.innerHTML += ` just bought` : toastMessage.innerHTML += ` ${createdAtAgo}`;
+
+        toastMessage.innerHTML += ` <a href="/products/${productHandle}" target="_blank">${productTitle}</a>!`;
         toastContainer.classList.add('toast-show');
         setTimeout(hideToast, displayDuration);
         currentOrder++;
@@ -117,4 +120,4 @@ const fomoToast = function() {
     setTimeout(showToast, totalInitialDelay);
 };
 
-fomoToast();
+dewoidToast();

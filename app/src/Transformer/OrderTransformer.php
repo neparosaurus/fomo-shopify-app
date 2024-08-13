@@ -18,7 +18,7 @@ class OrderTransformer
         $order->setProductHandle($orderDTO->productHandle);
         $order->setCreatedAt($orderDTO->createdAt);
         $order->setStore(Context::getStore());
-
+        $order->setProductImage($orderDTO->productImage);
         return $order;
     }
 }

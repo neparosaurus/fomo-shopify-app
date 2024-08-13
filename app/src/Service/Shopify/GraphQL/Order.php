@@ -33,7 +33,10 @@ class Order extends Base
                       node {
                         name,
                         product {
-                          handle
+                          handle,
+                          featuredImage {
+                            url
+                          }
                         }
                       }
                     }
