@@ -95,6 +95,7 @@ class ConfigurationController extends AbstractController
             'hideTimeInOrders' => $configuration->isHideTimeInOrders(),
             'showThumbnail' => $configuration->isShowThumbnail(),
             'thumbnailPosition' => $configuration->getThumbnailPosition(),
+            'thumbnailSize' => $configuration->getThumbnailSize(),
         ];
 
         $response = new JsonResponse($data, Response::HTTP_OK, []);

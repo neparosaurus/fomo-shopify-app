@@ -90,6 +90,7 @@ class ScriptController extends AbstractController
             'hideTimeInOrders' => $configuration->isHideTimeInOrders(),
             'showThumbnail' => $configuration->isShowThumbnail(),
             'thumbnailPosition' => $configuration->getThumbnailPosition(),
+            'thumbnailSize' => $configuration->getThumbnailSize(),
         ];
 
         return new Response(

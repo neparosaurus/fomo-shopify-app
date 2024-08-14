@@ -7,14 +7,33 @@ const dewoidToast = function(options) {
     const totalInitialDelay = initialDelay < scriptLoadDelay ? 0 : scriptLoadDelay - initialDelay;
     const delay = options.delay * 1000;
     const displayDuration = options.duration * 1000;
+    const fontFamily = options.fontFamily;
     const loop = options.loopOrders;
     const shuffle = options.shuffleOrders;
     const hideTime = options.hideTimeInOrders;
     const showThumbnail = options.showThumbnail;
     const thumbnailPosition = options.thumbnailPosition;
+    const thumbnailSize = options.thumbnailSize;
+
+    let toastTimeout;
+    let remainingTime = displayDuration;
+    let pauseStartTime;
 
     if (orders.length === 0) {
         return;
+    }
+
+    function loadFont(fontFamily) {
+        if (fontFamily === 'default') return;
+
+        const link = document.createElement('link');
+        link.href = `https://fonts.googleapis.com/css2?family=${fontFamily.replace(/\s+/g, '+')}:wght@400;700&display=swap`;
+        link.rel = 'stylesheet';
+        document.head.appendChild(link);
+    }
+
+    if (options.fontFamily !== 'default') {
+        loadFont(options.fontFamily);
     }
 
     const toastContainer = document.createElement('div');
@@ -34,7 +53,7 @@ const dewoidToast = function(options) {
 
     style.innerHTML = `
     .toast-container {
-      ${options.fontFamily !== 'default' ? `fontFamily: ${options.fontFamily};` : ''}
+      ${options.fontFamily !== 'default' ? `font-family: '${options.fontFamily}', sans-serif;` : ''}
       ${options.position.includes('top') ? `top: 20px;` : 'bottom: 20px;'}
       ${options.position.includes('left') ? `left: 0;` : 'right: 0;'}
       background-color: ${options.backgroundColor};
@@ -50,6 +69,7 @@ const dewoidToast = function(options) {
     
     .toast-message img {
       ${options.thumbnailPosition === 'left' ? 'margin-left: -4px; margin-right: 4px;' : 'margin-right: -4px; margin-left: 4px;'}
+      height: ${thumbnailSize}px;
     }
 
     .toast-container.toast-show {
@@ -84,7 +104,10 @@ const dewoidToast = function(options) {
             toastMessage.innerHTML += `<img src="${productImage}&height=84" alt="${productTitle}" />`;
         }
         toastContainer.classList.add('toast-show');
-        setTimeout(hideToast, displayDuration);
+
+        // Start the timeout for hiding the toast
+        pauseStartTime = performance.now();
+        toastTimeout = setTimeout(hideToast, remainingTime);
         currentOrderIndex++;
     }
 
@@ -101,6 +124,17 @@ const dewoidToast = function(options) {
     }
 
     setTimeout(showToast, totalInitialDelay);
+
+    toastContainer.addEventListener('mouseenter', () => {
+        clearTimeout(toastTimeout);
+        const elapsedTime = performance.now() - pauseStartTime;
+        remainingTime -= elapsedTime;
+    });
+
+    toastContainer.addEventListener('mouseleave', () => {
+        pauseStartTime = performance.now();
+        toastTimeout = setTimeout(hideToast, remainingTime);
+    });
 };
 
 async function dewoidToastInit() {

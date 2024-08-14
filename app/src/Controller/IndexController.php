@@ -85,6 +85,7 @@ class IndexController extends AbstractController
                 'hideTimeInOrders' => $configuration->isHideTimeInOrders(),
                 'showThumbnail' => $configuration->isShowThumbnail(),
                 'thumbnailPosition' => $configuration->getThumbnailPosition(),
+                'thumbnailSize' => $configuration->getThumbnailSize(),
             ],
         ]);
     }

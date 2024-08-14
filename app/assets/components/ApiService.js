@@ -89,6 +89,7 @@ export const saveConfiguration = async (
     hideTimeInOrders,
     showThumbnail,
     thumbnailPosition,
+    thumbnailSize,
 ) => {
     try {
         return await apiClient.post('/configuration', {
@@ -110,6 +111,7 @@ export const saveConfiguration = async (
             hideTimeInOrders,
             showThumbnail,
             thumbnailPosition,
+            thumbnailSize,
         });
     } catch (error) {
         console.error("Error updating configuration tag:", error);

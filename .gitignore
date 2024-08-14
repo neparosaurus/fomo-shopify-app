@@ -46,3 +46,6 @@
 # extensions build output
 /extension/extensions/*/build
 ###< extension ###
+
+/app/shopify.app.dewoid-toast.toml
+/app/extensions/

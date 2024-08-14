@@ -11,7 +11,19 @@ import {
     Text,
     RangeSlider,
     RadioButton,
-    hsbToHex, AlphaPicker, PageActions, BlockStack, InlineStack, Layout, Label, TextField, Form, Checkbox, Grid, Divider
+    hsbToHex,
+    AlphaPicker,
+    PageActions,
+    BlockStack,
+    InlineStack,
+    Layout,
+    Label,
+    TextField,
+    Form,
+    Checkbox,
+    Grid,
+    Divider,
+    Badge
 } from '@shopify/polaris';
 import {saveConfiguration} from "../components/ApiService";
 import thumbnail_1 from '../images/beauty-&-health.gif';
@@ -61,6 +73,14 @@ const pluralize = (count, word) => {
     return count === 1 ? word : `${word}s`;
 };
 
+const loadFont = (fontName) => {
+    const link = document.createElement('link');
+    link.href = `https://fonts.googleapis.com/css2?family=${fontName}:wght@400;700&display=swap`;
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+};
+
+
 function IndexPage({initialData}) {
     const shopify = useAppBridge();
     const marginBtm = '30px';
@@ -88,6 +108,7 @@ function IndexPage({initialData}) {
     const [hideTimeInOrders, setHideTimeInOrders] = useState(data.hideTimeInOrders);
     const [showThumbnail, setShowThumbnail] = useState(data.showThumbnail);
     const [thumbnailPosition, setThumbnailPosition] = useState(data.thumbnailPosition);
+    const [thumbnailSize, setThumbnailSize] = useState(data.thumbnailSize);
 
     const getThresholdValue = (minutes) => {
         if (minutes >= 1440) return minutes / 1440 + 83;    // Convert to days range 84-114
@@ -119,10 +140,13 @@ function IndexPage({initialData}) {
 
     const fontFamilyOptions = [
         {label: 'Theme\'s default', value: 'default'},
-        {label: 'Arial', value: 'arial'},
-        {label: 'Inter', value: 'inter'},
-        {label: 'Poppins', value: 'poppins'},
-        {label: 'Montserrat', value: 'montserrat'},
+        {label: 'Roboto', value: 'Roboto'},
+        {label: 'Open Sans', value: 'Open+Sans'},
+        {label: 'Lato', value: 'Lato'},
+        {label: 'Montserrat', value: 'Montserrat'},
+        {label: 'Poppins', value: 'Poppins'},
+        {label: 'Merriweather', value: 'Merriweather'},
+        {label: 'Playfair Display', value: 'Playfair+Display'},
     ];
 
     const positionOptions = [
@@ -138,7 +162,10 @@ function IndexPage({initialData}) {
     ]
 
     const handleFontFamilyChange = useCallback(
-        (value) => setFontFamily(value),
+        (value) => {
+            setFontFamily(value);
+            loadFont(value);
+        },
         []
     );
 
@@ -200,6 +227,11 @@ function IndexPage({initialData}) {
         [],
     )
 
+    const handleThumbnailSizeChange = useCallback(
+        (value) => setThumbnailSize(value.toString()),
+        [],
+    );
+
     const handleThresholdValueChange = (value) => {
         setThresholdValue(value);
         setDisplayedValue(value);
@@ -242,6 +274,7 @@ function IndexPage({initialData}) {
             hideTimeInOrders,
             showThumbnail,
             thumbnailPosition,
+            thumbnailSize,
         );
         setIsSaving(false);
 
@@ -265,6 +298,7 @@ function IndexPage({initialData}) {
                 hideTimeInOrders,
                 showThumbnail,
                 thumbnailPosition,
+                thumbnailSize,
                 ordersLength,
                 ordersShowingLength,
             });
@@ -313,6 +347,7 @@ function IndexPage({initialData}) {
         setHideTimeInOrders(dataDynamic.hideTimeInOrders);
         setShowThumbnail(dataDynamic.showThumbnail);
         setThumbnailPosition(dataDynamic.thumbnailPosition);
+        setThumbnailSize(dataDynamic.thumbnailSize);
 
         shopify.saveBar.hide('save-bar');
     };
@@ -336,7 +371,8 @@ function IndexPage({initialData}) {
                 shuffleOrders !== dataDynamic.shuffleOrders ||
                 hideTimeInOrders !== dataDynamic.hideTimeInOrders ||
                 showThumbnail !== dataDynamic.showThumbnail ||
-                thumbnailPosition !== dataDynamic.thumbnailPosition
+                thumbnailPosition !== dataDynamic.thumbnailPosition ||
+                thumbnailSize !== dataDynamic.thumbnailSize
             ) {
                 setIsChanged(true);
                 shopify.saveBar.show('save-bar');
@@ -363,8 +399,16 @@ function IndexPage({initialData}) {
         hideTimeInOrders,
         showThumbnail,
         thumbnailPosition,
+        thumbnailSize,
         dataDynamic
     ]);
+
+    useEffect(() => {
+        if (fontFamily !== 'default') {
+            loadFont(fontFamily);
+        }
+    }, [fontFamily]);
+
 
     return (
         <Page title="Notifications App Prototype">
@@ -376,8 +420,8 @@ function IndexPage({initialData}) {
                         <Card sectioned style={{marginBottom: marginBtm}}>
                             <BlockStack gap="400">
                                 <InlineStack gap="100" direction="row" align="space-between">
-                                    <Text as="h2" variant="bodyMd" style={{lineHeight: "200%"}}>
-                                        The app is <b>{appEnabled ? 'enabled' : 'disabled'}</b>
+                                    <Text as="h2" variant="bodyMd" style={{display: 'flex', alignItems: 'center'}}>
+                                        The app is {appEnabled ? <Badge tone="success" style={{height: '100%', marginLeft: '5px'}}>enabled</Badge> : <Badge tone="info" style={{height: '100%'}}>disabled</Badge>}
                                     </Text>
                                     <Button onClick={handleAppEnabled}>{appEnabled ? 'Disable' : 'Enable'}</Button>
                                 </InlineStack>
@@ -710,6 +754,29 @@ function IndexPage({initialData}) {
                                     onChange={handleShowThumbnail}
                                 />
                             </div>
+                            <div style={{display: 'flex', flexDirection: 'column', marginBottom: '4px'}}>
+                                <RangeSlider
+                                    output
+                                    label="Thumbnail size"
+                                    min={4}
+                                    max={100}
+                                    step={1}
+                                    value={thumbnailSize}
+                                    onChange={handleThumbnailSizeChange}
+                                    disabled={showThumbnail === false}
+                                    suffix={
+                                        <p
+                                            style={{
+                                                minWidth: '24px',
+                                                width: '38px',
+                                                textAlign: 'right',
+                                            }}
+                                        >
+                                            {thumbnailSize}px
+                                        </p>
+                                    }
+                                />
+                            </div>
                             <div style={{display: 'flex', flexDirection: 'column'}}>
                                 <Select
                                     options={thumbnailPositionOptions}
@@ -756,6 +823,7 @@ function IndexPage({initialData}) {
                             ...(position === 'bottom-left' || position === 'bottom-right' ? {marginTop: 'auto'} : {marginTop: '0'}),
                         }}>
                             <p style={{
+                                fontFamily: fontFamily === 'default' ? 'inherit' : fontFamily.replace(/\+/g, ' '),
                                 margin: 0,
                                 color: hsbaToHex(textColor),
                                 fontSize: `${fontSize}%`,
@@ -769,21 +837,21 @@ function IndexPage({initialData}) {
                                         marginRight: '6px',
                                         marginTop: '-4px',
                                         marginBottom: '-4px',
-                                        width: '42px',
+                                        height: `${thumbnailSize}px`,
                                     }}
                                          src={thumbnail}
                                     />
                                 )}
-                                <span style={{fontWeight: '700'}}>Robert Bloggs</span> from <span
-                                style={{fontWeight: '700'}}>Barcelona</span> just bought a <a
-                                style={{fontWeight: '700', color: 'inherit'}} href="#">Super Soft Dog Toy</a>
+                                <span style={{fontWeight: '700'}}>Robert Bloggs</span> from
+                                <span style={{fontWeight: '700'}}>Barcelona</span> just bought a
+                                <a style={{fontWeight: '700', color: 'inherit'}} href="#">Super Soft Dog Toy</a>
                                 {showThumbnail && thumbnailPosition === 'right' && (
                                     <img style={{
                                         marginLeft: '6px',
                                         marginRight: '-8px',
                                         marginTop: '-4px',
                                         marginBottom: '-4px',
-                                        width: '42px',
+                                        height: `${thumbnailSize}px`,
                                     }}
                                         src={thumbnail}
                                     />

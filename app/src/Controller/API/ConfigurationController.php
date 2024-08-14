@@ -56,6 +56,7 @@ class ConfigurationController
         $configurationDb->setHideTimeInOrders($newConfiguration->isHideTimeInOrders());
         $configurationDb->setShowThumbnail($newConfiguration->isShowThumbnail());
         $configurationDb->setThumbnailPosition($newConfiguration->getThumbnailPosition());
+        $configurationDb->setThumbnailSize($newConfiguration->getThumbnailSize());
 
         $this->entityManager->persist($configurationDb);
         $this->entityManager->flush();
@@ -92,9 +93,9 @@ class ConfigurationController
             'hideTime' => $configurationDb->isHideTimeInOrders(),
             'showThumbnail' => $configurationDb->isShowThumbnail(),
             'thumbnailPosition' => $configurationDb->getThumbnailPosition(),
+            'thumbnailSize' => $configurationDb->getThumbnailSize(),
         ];
 
-//        return new JsonResponse($data, Response::HTTP_OK, [], true);
         return new JsonResponse(json_encode($data, true), Response::HTTP_OK, [], true);
     }
 }

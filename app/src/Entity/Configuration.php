@@ -85,6 +85,9 @@ class Configuration
     #[ORM\Column(length: 5, nullable: true)]
     private ?string $thumbnailPosition = "right";
 
+    #[ORM\Column(length: 4)]
+    private ?string $thumbnailSize = "42";
+
     public function __construct()
     {
         $this->store = Context::getStore();
@@ -307,6 +310,18 @@ class Configuration
     public function setThumbnailPosition(?string $thumbnailPosition): static
     {
         $this->thumbnailPosition = $thumbnailPosition;
+
+        return $this;
+    }
+
+    public function getThumbnailSize(): ?string
+    {
+        return $this->thumbnailSize;
+    }
+
+    public function setThumbnailSize(string $thumbnailSize): static
+    {
+        $this->thumbnailSize = $thumbnailSize;
 
         return $this;
     }

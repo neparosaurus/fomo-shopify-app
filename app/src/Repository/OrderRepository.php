@@ -42,4 +42,21 @@ class OrderRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    public function removeAll(Store $store)
+    {
+        $orders = $this->createQueryBuilder('o')
+            ->where('o.store = :store')
+            ->setParameter('store', $store)
+            ->getQuery()
+            ->getResult();
+
+        $em = $this->getEntityManager();
+
+        foreach ($orders as $order) {
+            $em->remove($order);
+        }
+
+        $em->flush();
+    }
 }
