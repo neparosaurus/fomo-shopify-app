@@ -106,7 +106,9 @@ function IndexPage({initialData}) {
     const [loopOrders, setLoopOrders] = useState(data.loopOrders);
     const [shuffleOrders, setShuffleOrders] = useState(data.shuffleOrders);
     const [hideTimeInOrders, setHideTimeInOrders] = useState(data.hideTimeInOrders);
+    const [hideLocationInOrders, setHideLocationInOrders] = useState(data.hideLocationInOrders);
     const [showThumbnail, setShowThumbnail] = useState(data.showThumbnail);
+    const [showThumbnailPadding, setShowThumbnailPadding] = useState(data.showThumbnailPadding);
     const [thumbnailPosition, setThumbnailPosition] = useState(data.thumbnailPosition);
     const [thumbnailSize, setThumbnailSize] = useState(data.thumbnailSize);
 
@@ -222,6 +224,11 @@ function IndexPage({initialData}) {
         [],
     )
 
+    const handleHideLocationInOrders = useCallback(
+        (isChecked) => setHideLocationInOrders(isChecked),
+        [],
+    )
+
     const handleShowThumbnail = useCallback(
         (isChecked) => setShowThumbnail(isChecked),
         [],
@@ -272,6 +279,7 @@ function IndexPage({initialData}) {
             loopOrders,
             shuffleOrders,
             hideTimeInOrders,
+            hideLocationInOrders,
             showThumbnail,
             thumbnailPosition,
             thumbnailSize,
@@ -296,6 +304,7 @@ function IndexPage({initialData}) {
                 loopOrders,
                 shuffleOrders,
                 hideTimeInOrders,
+                hideLocationInOrders,
                 showThumbnail,
                 thumbnailPosition,
                 thumbnailSize,
@@ -345,6 +354,7 @@ function IndexPage({initialData}) {
         setLoopOrders(dataDynamic.loopOrders);
         setShuffleOrders(dataDynamic.shuffleOrders);
         setHideTimeInOrders(dataDynamic.hideTimeInOrders);
+        setHideLocationInOrders(dataDynamic.hideLocationInOrders);
         setShowThumbnail(dataDynamic.showThumbnail);
         setThumbnailPosition(dataDynamic.thumbnailPosition);
         setThumbnailSize(dataDynamic.thumbnailSize);
@@ -370,6 +380,7 @@ function IndexPage({initialData}) {
                 loopOrders !== dataDynamic.loopOrders ||
                 shuffleOrders !== dataDynamic.shuffleOrders ||
                 hideTimeInOrders !== dataDynamic.hideTimeInOrders ||
+                hideLocationInOrders !== dataDynamic.hideLocationInOrders ||
                 showThumbnail !== dataDynamic.showThumbnail ||
                 thumbnailPosition !== dataDynamic.thumbnailPosition ||
                 thumbnailSize !== dataDynamic.thumbnailSize
@@ -397,6 +408,7 @@ function IndexPage({initialData}) {
         loopOrders,
         shuffleOrders,
         hideTimeInOrders,
+        hideLocationInOrders,
         showThumbnail,
         thumbnailPosition,
         thumbnailSize,
@@ -466,10 +478,14 @@ function IndexPage({initialData}) {
                             </div>
                             <div style={{display: 'flex', flexDirection: 'column'}}>
                                 <Checkbox
-                                    label="Loop through notifications"
+                                    label="Loop notifications"
                                     checked={loopOrders === true}
                                     onChange={handleLoopOrdersChange}
-                                    disabled={shuffleOrders === true}
+                                    helpText={
+                                        <Text as="p" variant="bodySm" tone="subdued" style={{marginTop: '8px'}}>
+                                            When it comes to the end, show notifications from beginning.
+                                        </Text>
+                                    }
                                 />
                             </div>
                             <div style={{display: 'flex', flexDirection: 'column'}}>
@@ -477,12 +493,6 @@ function IndexPage({initialData}) {
                                     label="Shuffle order of notifications"
                                     checked={shuffleOrders === true}
                                     onChange={handleShuffleOrdersChange}
-                                    helpText={
-                                        <Text as="p" variant="bodySm" tone="subdued" style={{marginTop: '8px'}}>
-                                            If shuffle order of notifications is turned on, loop through notifications
-                                            is automatically turned off.
-                                        </Text>
-                                    }
                                 />
                             </div>
                             <div style={{display: 'flex', flexDirection: 'column'}}>
@@ -492,7 +502,19 @@ function IndexPage({initialData}) {
                                     onChange={handleHideTimeInOrders}
                                     helpText={
                                         <Text as="p" variant="bodySm" tone="subdued" style={{marginTop: '8px'}}>
-                                            If checked, show "bought" instead of "seconds/minutes/hours/days ago"
+                                            If checked show "bought" instead of "seconds/minutes/hours/days ago"
+                                        </Text>
+                                    }
+                                />
+                            </div>
+                            <div style={{display: 'flex', flexDirection: 'column'}}>
+                                <Checkbox
+                                    label="Hide location in notifications"
+                                    checked={hideLocationInOrders === true}
+                                    onChange={handleHideLocationInOrders}
+                                    helpText={
+                                        <Text as="p" variant="bodySm" tone="subdued" style={{marginTop: '8px'}}>
+                                            If checked don't show "from"
                                         </Text>
                                     }
                                 />
@@ -821,7 +843,15 @@ function IndexPage({initialData}) {
                             marginBottom: '5px',
                             ...(position === 'top-left' || position === 'bottom-left' ? {marginRight: 'auto'} : {marginLeft: 'auto'}),
                             ...(position === 'bottom-left' || position === 'bottom-right' ? {marginTop: 'auto'} : {marginTop: '0'}),
+                            overflow: 'hidden',
                         }}>
+                            {showThumbnail && thumbnailPosition === 'left' && (
+                                <img style={{
+                                    height: `${thumbnailSize}px`,
+                                }}
+                                     src={thumbnail}
+                                />
+                            )}
                             <p style={{
                                 fontFamily: fontFamily === 'default' ? 'inherit' : fontFamily.replace(/\+/g, ' '),
                                 margin: 0,
@@ -831,32 +861,19 @@ function IndexPage({initialData}) {
                                 alignItems: 'center',
                                 gap: '5px',
                             }}>
-                                {showThumbnail && thumbnailPosition === 'left' && (
-                                    <img style={{
-                                        marginLeft: '-8px',
-                                        marginRight: '6px',
-                                        marginTop: '-4px',
-                                        marginBottom: '-4px',
-                                        height: `${thumbnailSize}px`,
-                                    }}
-                                         src={thumbnail}
-                                    />
-                                )}
                                 <span style={{fontWeight: '700'}}>Robert Bloggs</span> from
-                                <span style={{fontWeight: '700'}}>Barcelona</span> just bought a
+                                {!hideLocationInOrders ?? (<>
+                                    <span style={{fontWeight: '700'}}>Barcelona</span> just bought a
+                                </>)}
                                 <a style={{fontWeight: '700', color: 'inherit'}} href="#">Super Soft Dog Toy</a>
-                                {showThumbnail && thumbnailPosition === 'right' && (
-                                    <img style={{
-                                        marginLeft: '6px',
-                                        marginRight: '-8px',
-                                        marginTop: '-4px',
-                                        marginBottom: '-4px',
-                                        height: `${thumbnailSize}px`,
-                                    }}
-                                        src={thumbnail}
-                                    />
-                                )}
                             </p>
+                            {showThumbnail && thumbnailPosition === 'right' && (
+                                <img style={{
+                                    height: `${thumbnailSize}px`,
+                                }}
+                                     src={thumbnail}
+                                />
+                            )}
                         </div>
                     </div>
                 </Layout.AnnotatedSection>

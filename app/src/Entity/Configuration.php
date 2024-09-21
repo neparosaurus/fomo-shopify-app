@@ -88,6 +88,12 @@ class Configuration
     #[ORM\Column(length: 4)]
     private ?string $thumbnailSize = "42";
 
+    #[ORM\Column]
+    private ?bool $hideLocationInOrders = false;
+
+    #[ORM\Column]
+    private ?bool $showThumbnailPadding = false;
+
     public function __construct()
     {
         $this->store = Context::getStore();
@@ -322,6 +328,30 @@ class Configuration
     public function setThumbnailSize(string $thumbnailSize): static
     {
         $this->thumbnailSize = $thumbnailSize;
+
+        return $this;
+    }
+
+    public function isHideLocationInOrders(): ?bool
+    {
+        return $this->hideLocationInOrders;
+    }
+
+    public function setHideLocationInOrders(bool $hideLocationInOrders): static
+    {
+        $this->hideLocationInOrders = $hideLocationInOrders;
+
+        return $this;
+    }
+
+    public function isShowThumbnailPadding(): ?bool
+    {
+        return $this->showThumbnailPadding;
+    }
+
+    public function setShowThumbnailPadding(bool $showThumbnailPadding): static
+    {
+        $this->showThumbnailPadding = $showThumbnailPadding;
 
         return $this;
     }

@@ -54,7 +54,9 @@ class ConfigurationController
         $configurationDb->setLoopOrders($newConfiguration->isLoopOrders());
         $configurationDb->setShuffleOrders($newConfiguration->isShuffleOrders());
         $configurationDb->setHideTimeInOrders($newConfiguration->isHideTimeInOrders());
+        $configurationDb->setHideLocationInOrders($newConfiguration->isHideLocationInOrders());
         $configurationDb->setShowThumbnail($newConfiguration->isShowThumbnail());
+        $configurationDb->setShowThumbnailPadding($newConfiguration->isShowThumbnailPadding());
         $configurationDb->setThumbnailPosition($newConfiguration->getThumbnailPosition());
         $configurationDb->setThumbnailSize($newConfiguration->getThumbnailSize());
 
@@ -91,7 +93,9 @@ class ConfigurationController
             'loopOrders' => $configurationDb->isLoopOrders(),
             'shuffleOrders' => $configurationDb->isShuffleOrders(),
             'hideTime' => $configurationDb->isHideTimeInOrders(),
+            'hideLocationInOrders' => $configurationDb->isHideLocationInOrders(),
             'showThumbnail' => $configurationDb->isShowThumbnail(),
+            'showThumbnailPadding' => $configurationDb->isShowThumbnailPadding(),
             'thumbnailPosition' => $configurationDb->getThumbnailPosition(),
             'thumbnailSize' => $configurationDb->getThumbnailSize(),
         ];

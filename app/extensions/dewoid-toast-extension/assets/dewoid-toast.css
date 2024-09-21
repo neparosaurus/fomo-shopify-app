@@ -2,10 +2,12 @@
     position: fixed;
     z-index: 999;
     padding: 10px 12px;
+    background: linear-gradient(to right, #000 0% 96%, #fff 96% 100%);
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
     opacity: 0;
     visibility: hidden;
     max-width: calc(100% - 60px);
+    overflow: hidden;
 }
 
 .toast-content {
@@ -17,7 +19,9 @@
     margin: 0;
     font-size: 14px;
     color: rgba(255,255,255,0.7);
+    max-width: 600px;
     display: flex;
+    flex-wrap: wrap;
     gap: 5px;
     align-items: center;
 }
@@ -28,10 +32,9 @@
 }
 
 .toast-message img {
-    margin-top: -4px;
-    margin-bottom: -4px;
-    height: 42px;
+    margin: -10px -12px;
     max-width: 150px;
+    min-height: 45px;
 }
 
 .toast-container.toast-show {

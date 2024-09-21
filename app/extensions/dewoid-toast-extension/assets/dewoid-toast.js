@@ -11,13 +11,16 @@ const dewoidToast = function(options) {
     const loop = options.loopOrders;
     const shuffle = options.shuffleOrders;
     const hideTime = options.hideTimeInOrders;
+    const hideLocation = options.hideLocationInOrders;
     const showThumbnail = options.showThumbnail;
+    const showThumbnailPadding = options.showThumbnailPadding;
     const thumbnailPosition = options.thumbnailPosition;
     const thumbnailSize = options.thumbnailSize;
 
     let toastTimeout;
     let remainingTime = displayDuration;
-    let pauseStartTime;
+    let toastStartTime;
+    let shownIndexes = [];
 
     if (orders.length === 0) {
         return;
@@ -32,8 +35,8 @@ const dewoidToast = function(options) {
         document.head.appendChild(link);
     }
 
-    if (options.fontFamily !== 'default') {
-        loadFont(options.fontFamily);
+    if (fontFamily !== 'default') {
+        loadFont(fontFamily);
     }
 
     const toastContainer = document.createElement('div');
@@ -68,7 +71,7 @@ const dewoidToast = function(options) {
     }
     
     .toast-message img {
-      ${options.thumbnailPosition === 'left' ? 'margin-left: -4px; margin-right: 4px;' : 'margin-right: -4px; margin-left: 4px;'}
+      margin-${options.thumbnailPosition === 'left' ? 'right' : 'left' }: 4px;
       height: ${thumbnailSize}px;
     }
 
@@ -80,7 +83,22 @@ const dewoidToast = function(options) {
 
     function showToast() {
         if (shuffle) {
-            currentOrderIndex = getRandomInt(0, orders.length - 1);
+            let previousOrderIndex = currentOrderIndex - 1;
+            currentOrderIndex = getRandomInt(0, orders.length);
+
+            if (shownIndexes.length === orders.length) {
+                shownIndexes = [];
+
+                if (!loop) {
+                    return;
+                }
+            }
+
+            while (orders.length > 1 && (previousOrderIndex === currentOrderIndex || shownIndexes.includes(currentOrderIndex))) {
+                currentOrderIndex = getRandomInt(0, orders.length);
+            }
+
+            shownIndexes.push(currentOrderIndex);
         } else if (currentOrderIndex >= orders.length) {
             currentOrderIndex = 0;
 
@@ -95,7 +113,7 @@ const dewoidToast = function(options) {
             toastMessage.innerHTML += `<img src="${productImage}&height=84" alt="${productTitle}" />`;
         }
         toastMessage.innerHTML += `<span>${customerName}</span>`;
-        if (location) {
+        if (location && !hideLocation) {
             toastMessage.innerHTML += ` from <span>${location}</span>`;
         }
         hideTime ? toastMessage.innerHTML += ` bought` : toastMessage.innerHTML += ` ${createdAtAgo}`;
@@ -105,8 +123,9 @@ const dewoidToast = function(options) {
         }
         toastContainer.classList.add('toast-show');
 
-        // Start the timeout for hiding the toast
-        pauseStartTime = performance.now();
+        toastStartTime = performance.now();
+        remainingTime = displayDuration;
+
         toastTimeout = setTimeout(hideToast, remainingTime);
         currentOrderIndex++;
     }
@@ -127,12 +146,12 @@ const dewoidToast = function(options) {
 
     toastContainer.addEventListener('mouseenter', () => {
         clearTimeout(toastTimeout);
-        const elapsedTime = performance.now() - pauseStartTime;
+        const elapsedTime = performance.now() - toastStartTime;
         remainingTime -= elapsedTime;
     });
 
     toastContainer.addEventListener('mouseleave', () => {
-        pauseStartTime = performance.now();
+        toastStartTime = performance.now();
         toastTimeout = setTimeout(hideToast, remainingTime);
     });
 };

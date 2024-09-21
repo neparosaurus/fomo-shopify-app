@@ -88,7 +88,9 @@ class ScriptController extends AbstractController
             'loopOrders' => $configuration->isLoopOrders(),
             'shuffleOrders' => $configuration->isShuffleOrders(),
             'hideTimeInOrders' => $configuration->isHideTimeInOrders(),
+            'hideLocationInOrders' => $configuration->isHideLocationInOrders(),
             'showThumbnail' => $configuration->isShowThumbnail(),
+            'showThumbnailPadding' => $configuration->isShowThumbnailPadding(),
             'thumbnailPosition' => $configuration->getThumbnailPosition(),
             'thumbnailSize' => $configuration->getThumbnailSize(),
         ];

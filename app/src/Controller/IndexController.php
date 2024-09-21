@@ -2,24 +2,22 @@
 
 namespace App\Controller;
 
-use App\DTO\OrderDTO;
 use App\Entity\Configuration;
-use App\Entity\Order as OrderEntity;
 use App\Entity\Store;
+use App\Message\ImportOrders;
 use App\Repository\ConfigurationRepository;
 use App\Repository\OrderRepository;
 use App\Repository\StoreRepository;
 use App\Service\Shopify\Auth;
 use App\Service\Shopify\Context;
-use App\Service\Shopify\GraphQL\Order;
 use App\Service\Shopify\GraphQL\Webhook;
 use App\Service\UrlService;
-use App\Transformer\OrderTransformer;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
@@ -83,7 +81,9 @@ class IndexController extends AbstractController
                 'loopOrders' => $configuration->isLoopOrders(),
                 'shuffleOrders' => $configuration->isShuffleOrders(),
                 'hideTimeInOrders' => $configuration->isHideTimeInOrders(),
+                'hideLocationInOrders' => $configuration->isHideLocationInOrders(),
                 'showThumbnail' => $configuration->isShowThumbnail(),
+                'showThumbnailPadding' => $configuration->isShowThumbnailPadding(),
                 'thumbnailPosition' => $configuration->getThumbnailPosition(),
                 'thumbnailSize' => $configuration->getThumbnailSize(),
             ],
@@ -112,7 +112,7 @@ class IndexController extends AbstractController
     }
 
     #[Route('/auth/callback', name: 'app_auth_callback')]
-    public function authCallback(Request $request, EntityManagerInterface $entityManager): Response
+    public function authCallback(Request $request, EntityManagerInterface $entityManager, MessageBusInterface $bus): Response
     {
         if (!Auth::isRequestVerified($request)) {
             $this->addFlash("error", "Not verified request");
@@ -171,34 +171,11 @@ class IndexController extends AbstractController
             UrlService::toUrl('webhook'),
         );
 
-        $this->importOrders();
+        $bus->dispatch(new ImportOrders($store));
 
         $this->addFlash("success", "App successfully installed to <b>{$store->getHost()}</b>");
         return $this->redirectToRoute('app_index', [
             'reactRouting' => ''
         ]);
-    }
-
-    private function importOrders(): void
-    {
-        $apiData = Order::get(50)->getBody();
-
-        if (!isset($apiData['data']) || !isset($apiData['data']['orders'])) {
-            return;
-        }
-
-        $ordersData = $apiData['data']['orders'];
-        $transformer = new OrderTransformer();
-        $orderRepository = $this->entityManager->getRepository(OrderEntity::class);
-
-        /** @var OrderEntity[] $orders */
-        $orders = array_reduce($ordersData['edges'], function ($carry, $node) use ($orderRepository, $transformer) {
-            $orderDTO = OrderDTO::fromGraphQLResponse($node['node']);
-            $order = $transformer->transformToEntity($orderDTO);
-
-            $this->entityManager->persist($order);
-        });
-
-        $this->entityManager->flush();
     }
 }
