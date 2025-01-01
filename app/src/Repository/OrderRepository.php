@@ -17,12 +17,14 @@ class OrderRepository extends ServiceEntityRepository
         parent::__construct($registry, Order::class);
     }
 
-    public function getWithMinutesLimit(Store $store, int $minutes): array
+    public function getWithMinutesLimit(Store $store, int $minutes, array $valuesToFetch): array
     {
         $now = new \DateTimeImmutable();
         $timeLimit = $now->modify("-$minutes minutes");
+        $selectFields = $this->buildSelectFields($valuesToFetch);
 
         return $this->createQueryBuilder('o')
+            ->select($selectFields)
             ->andWhere('o.store = :store')
             ->andWhere('o.createdAt >= :timeLimit')
             ->setParameter('store', $store)
@@ -32,9 +34,12 @@ class OrderRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    public function getWithOrdersLimit(Store $store, int $limit): array
+    public function getWithOrdersLimit(Store $store, int $limit, array $valuesToFetch): array
     {
+        $selectFields = $this->buildSelectFields($valuesToFetch);
+
         return $this->createQueryBuilder('o')
+            ->select($selectFields)
             ->andWhere('o.store = :store')
             ->setParameter('store', $store)
             ->orderBy('o.createdAt', 'DESC')
@@ -58,5 +63,30 @@ class OrderRepository extends ServiceEntityRepository
         }
 
         $em->flush();
+    }
+
+    private function buildSelectFields(array $valuesToFetch): string
+    {
+        $fieldMap = [
+            'customerName' => 'o.customerName',
+            'location' => 'o.location',
+            'productTitle' => 'o.productTitle',
+            'productHandle' => 'o.productHandle',
+            'productImage' => 'o.productImage',
+            'createdAt' => 'o.createdAt',
+        ];
+
+        $selectFields = [];
+        foreach ($valuesToFetch as $value) {
+            if (isset($fieldMap[$value])) {
+                $selectFields[] = $fieldMap[$value];
+            }
+        }
+
+        if (empty($selectFields)) {
+            return 'o';
+        }
+
+        return implode(', ', $selectFields);
     }
 }

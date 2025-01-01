@@ -44,9 +44,6 @@ class Configuration
     #[ORM\Column]
     private ?int $duration = 5;
 
-    #[ORM\Column(length: 7)]
-    private ?string $cornerStyle = "rounded";
-
     #[ORM\Column(length: 12)]
     private ?string $position = "bottom-left";
 
@@ -76,23 +73,26 @@ class Configuration
     #[ORM\Column]
     private ?bool $shuffleOrders = false;
 
-    #[ORM\Column]
-    private ?bool $hideTimeInOrders = false;
+    #[ORM\Column(length: 255)]
+    private ?string $textContent = "";
 
     #[ORM\Column]
-    private ?bool $showThumbnail = false;
-
-    #[ORM\Column(length: 5, nullable: true)]
-    private ?string $thumbnailPosition = "right";
-
-    #[ORM\Column(length: 4)]
-    private ?string $thumbnailSize = "42";
+    private ?int $designTemplateId = 1;
 
     #[ORM\Column]
-    private ?bool $hideLocationInOrders = false;
+    private ?bool $showThumbnail = true;
+
+    #[ORM\Column(length: 5)]
+    private ?string $thumbnailPosition = "end";
+
+    #[ORM\Column(length: 3)]
+    private ?string $verticalAlignment = "mid";
+
+    #[ORM\Column(type: Types::SMALLINT)]
+    private ?int $cornerRadius = 0;
 
     #[ORM\Column]
-    private ?bool $showThumbnailPadding = false;
+    private ?bool $rtl = false;
 
     public function __construct()
     {
@@ -172,18 +172,6 @@ class Configuration
     public function setDuration(int $duration): static
     {
         $this->duration = $duration;
-
-        return $this;
-    }
-
-    public function getCornerStyle(): ?string
-    {
-        return $this->cornerStyle;
-    }
-
-    public function setCornerStyle(string $cornerStyle): static
-    {
-        $this->cornerStyle = $cornerStyle;
 
         return $this;
     }
@@ -284,14 +272,26 @@ class Configuration
         return $this;
     }
 
-    public function isHideTimeInOrders(): ?bool
+    public function getTextContent(): ?string
     {
-        return $this->hideTimeInOrders;
+        return $this->textContent;
     }
 
-    public function setHideTimeInOrders(bool $hideTimeInOrders): static
+    public function setTextContent(string $textContent): static
     {
-        $this->hideTimeInOrders = $hideTimeInOrders;
+        $this->textContent = $textContent;
+
+        return $this;
+    }
+
+    public function getDesignTemplateId(): ?int
+    {
+        return $this->designTemplateId;
+    }
+
+    public function setDesignTemplateId(int $designTemplateId): static
+    {
+        $this->designTemplateId = $designTemplateId;
 
         return $this;
     }
@@ -313,45 +313,45 @@ class Configuration
         return $this->thumbnailPosition;
     }
 
-    public function setThumbnailPosition(?string $thumbnailPosition): static
+    public function setThumbnailPosition(string $thumbnailPosition): static
     {
         $this->thumbnailPosition = $thumbnailPosition;
 
         return $this;
     }
 
-    public function getThumbnailSize(): ?string
+    public function getVerticalAlignment(): ?string
     {
-        return $this->thumbnailSize;
+        return $this->verticalAlignment;
     }
 
-    public function setThumbnailSize(string $thumbnailSize): static
+    public function setVerticalAlignment(string $verticalAlignment): static
     {
-        $this->thumbnailSize = $thumbnailSize;
+        $this->verticalAlignment = $verticalAlignment;
 
         return $this;
     }
 
-    public function isHideLocationInOrders(): ?bool
+    public function getCornerRadius(): ?int
     {
-        return $this->hideLocationInOrders;
+        return $this->cornerRadius;
     }
 
-    public function setHideLocationInOrders(bool $hideLocationInOrders): static
+    public function setCornerRadius(int $cornerRadius): static
     {
-        $this->hideLocationInOrders = $hideLocationInOrders;
+        $this->cornerRadius = $cornerRadius;
 
         return $this;
     }
 
-    public function isShowThumbnailPadding(): ?bool
+    public function isRtl(): ?bool
     {
-        return $this->showThumbnailPadding;
+        return $this->rtl;
     }
 
-    public function setShowThumbnailPadding(bool $showThumbnailPadding): static
+    public function setRtl(bool $rtl): static
     {
-        $this->showThumbnailPadding = $showThumbnailPadding;
+        $this->rtl = $rtl;
 
         return $this;
     }

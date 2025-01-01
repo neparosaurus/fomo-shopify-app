@@ -10,12 +10,13 @@ const dewoidToast = function(options) {
     const fontFamily = options.fontFamily;
     const loop = options.loopOrders;
     const shuffle = options.shuffleOrders;
-    const hideTime = options.hideTimeInOrders;
-    const hideLocation = options.hideLocationInOrders;
+    const textContentLayout = options.textContent;
+    const designTemplateId = options.designTemplateId;
     const showThumbnail = options.showThumbnail;
-    const showThumbnailPadding = options.showThumbnailPadding;
     const thumbnailPosition = options.thumbnailPosition;
-    const thumbnailSize = options.thumbnailSize;
+    const verticalAlignment = options.verticalAlignment;
+    const cornerRadius = options.cornerRadius;
+    const rtl = options.rtl;
 
     let toastTimeout;
     let remainingTime = displayDuration;
@@ -55,24 +56,36 @@ const dewoidToast = function(options) {
     const style = document.createElement('style');
 
     style.innerHTML = `
+    :root {
+      --bg-color-1: #222;
+      --text-color-1: #fff;
+      --close-color-1: #fff;
+      
+      --bg-color-2: #222;
+      --bg-color-2-darker: #111;
+      --bg-color-2-brighter: #333;
+      --text-color-2: #fff;
+      --text-color-2-darker: #ccc;
+      --close-color-2: #fff;
+      
+      --bg-color-3: #222;
+      --bg-color-3-border: #111;
+      --text-color-3: #fff;
+      --text-color-3-darker: #ccc;
+      --close-color-3: #ccc;
+      
+      --bg-color-4: #222;
+      --text-color-4: #fff;
+      --text-color-4-darker: #999;
+      --text-color-4-bg: #444;
+      --close-color-4: #fff;
+    }
+
     .toast-container {
       ${options.fontFamily !== 'default' ? `font-family: '${options.fontFamily}', sans-serif;` : ''}
       ${options.position.includes('top') ? `top: 20px;` : 'bottom: 20px;'}
       ${options.position.includes('left') ? `left: 0;` : 'right: 0;'}
-      background-color: ${options.backgroundColor};
-      border-radius: ${options.cornerStyle === 'rounded' ? '5px' : '0'};
       transition: opacity 0.5s, visibility 0.5s, ${options.position.includes('left') ? 'left' : 'right'} 0.5s;
-    }
-
-    .toast-message,
-    .toast-message span,
-    .toast-message a {
-      color: ${options.textColor} !important;
-    }
-    
-    .toast-message img {
-      margin-${options.thumbnailPosition === 'left' ? 'right' : 'left' }: 4px;
-      height: ${thumbnailSize}px;
     }
 
     .toast-container.toast-show {
@@ -107,20 +120,40 @@ const dewoidToast = function(options) {
             }
         }
 
-        const { customerName, location, productTitle, productHandle, productImage, createdAtAgo } = orders[currentOrderIndex];
-        toastMessage.innerHTML = ``;
-        if (showThumbnail && productImage && thumbnailPosition === 'left') {
-            toastMessage.innerHTML += `<img src="${productImage}&height=84" alt="${productTitle}" />`;
-        }
-        toastMessage.innerHTML += `<span>${customerName}</span>`;
-        if (location && !hideLocation) {
-            toastMessage.innerHTML += ` from <span>${location}</span>`;
-        }
-        hideTime ? toastMessage.innerHTML += ` bought` : toastMessage.innerHTML += ` ${createdAtAgo}`;
-        toastMessage.innerHTML += ` <a href="/products/${productHandle}" target="_blank">${productTitle}</a>`;
-        if (showThumbnail && productImage && thumbnailPosition === 'right') {
-            toastMessage.innerHTML += `<img src="${productImage}&height=84" alt="${productTitle}" />`;
-        }
+        const { customerName, location, productTitle, productHandle, productImage, createdAtAgo } = orders[currentOrderIndex] || {};
+        let toastMessage = replacePlaceholders(textContentLayout, {
+            customerName,
+            location,
+            productTitle,
+            productHandle,
+            createdAtAgo
+        });
+        const imageHeight = designTemplateId === 1 ? "120" : "84";
+        const showThumbnailClass = showThumbnail ? ' toast-show-thumb' : '';
+        const thumbnailPositionClass = thumbnailPosition === "start" ? ' toast-order-2' : '';
+        const verticalAlignmentClass = verticalAlignment === "top" ? ' toast-align-top' : '';
+        const cornerRadiusClass = cornerRadius === 0 ? ' toast-flat' : '';
+        const rtlClass = rtl ? ' toast-rtl' : '';
+        const styleClass = ` style-${designTemplateId}`;
+
+        let toastHtml = `
+            <div class=
+                toast-content
+                ${showThumbnail ? 'toast-show-thumb' : ''}
+                ${thumbnailPosition === "start" ? 'toast-order-2' : ''}
+                ${cornerRadius === 0 ? 'toast-flat' : ''}
+                ${verticalAlignment === "top" ? 'toast-align-top' : ''}
+                ${rtl ? 'toast-rtl' : ''}
+                style-${designTemplateId}
+            >
+                <div class="toast-message">${toastMessage}</div>
+                ${productImage ? `<div class="toast-image">
+                    <img src="${productImage}&height=${designTemplateId === 1 ? "120" : "84"}" alt="${productTitle || 'Product Image'}">
+                </div>` : ''}
+                <div class="toast-close"></div>
+            </div>`;
+
+        toastContainer.innerHTML = toastHtml;
         toastContainer.classList.add('toast-show');
 
         toastStartTime = performance.now();
@@ -129,6 +162,16 @@ const dewoidToast = function(options) {
         toastTimeout = setTimeout(hideToast, remainingTime);
         currentOrderIndex++;
     }
+
+    function replacePlaceholders(template, data) {
+        return template
+            .replace('{{ customer }}', data.customerName ? `<span>${data.customerName}</span>` : '')
+            .replace('{{ location }}', data.location ? `<span>${data.location}</span>` : '')
+            .replace('{{ product }}', data.productTitle && data.productHandle ?
+                `<a href="/products/${data.productHandle}" target="_blank">${data.productTitle}</a>` : '')
+            .replace('{{ createdAt }}', data.createdAtAgo ? `${data.createdAtAgo}` : '');
+    }
+
 
     function hideToast() {
         toastContainer.classList.remove('toast-show');

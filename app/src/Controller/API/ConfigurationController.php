@@ -5,6 +5,7 @@ namespace App\Controller\API;
 use App\Entity\Configuration;
 use App\Repository\ConfigurationRepository;
 use App\Repository\OrderRepository;
+use App\Service\FieldExtractorService;
 use App\Service\Shopify\Context;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -19,13 +20,15 @@ class ConfigurationController
 {
     private ConfigurationRepository $configurationRepository;
     private EntityManagerInterface $entityManager;
+    private FieldExtractorService $fieldExtractor;
 
 
-    public function __construct(ConfigurationRepository $configurationRepository, EntityManagerInterface $entityManager)
+    public function __construct(ConfigurationRepository $configurationRepository, EntityManagerInterface $entityManager, FieldExtractorService $fieldExtractor)
     {
         Context::initialize();
         $this->configurationRepository = $configurationRepository;
         $this->entityManager = $entityManager;
+        $this->fieldExtractor = $fieldExtractor;
     }
 
     #[Route('/configuration', name: 'api_update_configuration', methods: ['POST'])]
@@ -43,32 +46,28 @@ class ConfigurationController
         $configurationDb->setFontFamily($newConfiguration->getFontFamily());
         $configurationDb->setBackgroundColor($newConfiguration->getBackgroundColor());
         $configurationDb->setTextColor($newConfiguration->getTextColor());
+        $configurationDb->setTextContent($newConfiguration->getTextContent());
+        $configurationDb->setDesignTemplateId($newConfiguration->getDesignTemplateId());
         $configurationDb->setInitialDelay($newConfiguration->getInitialDelay());
         $configurationDb->setDelay($newConfiguration->getDelay());
         $configurationDb->setDuration($newConfiguration->getDuration());
-        $configurationDb->setCornerStyle($newConfiguration->getCornerStyle());
         $configurationDb->setPosition($newConfiguration->getPosition());
         $configurationDb->setThresholdType($newConfiguration->getThresholdType());
         $configurationDb->setThresholdMinutes($newConfiguration->getThresholdMinutes());
         $configurationDb->setThresholdCount($newConfiguration->getThresholdCount());
         $configurationDb->setLoopOrders($newConfiguration->isLoopOrders());
         $configurationDb->setShuffleOrders($newConfiguration->isShuffleOrders());
-        $configurationDb->setHideTimeInOrders($newConfiguration->isHideTimeInOrders());
-        $configurationDb->setHideLocationInOrders($newConfiguration->isHideLocationInOrders());
-        $configurationDb->setShowThumbnail($newConfiguration->isShowThumbnail());
-        $configurationDb->setShowThumbnailPadding($newConfiguration->isShowThumbnailPadding());
-        $configurationDb->setThumbnailPosition($newConfiguration->getThumbnailPosition());
-        $configurationDb->setThumbnailSize($newConfiguration->getThumbnailSize());
 
         $this->entityManager->persist($configurationDb);
         $this->entityManager->flush();
 
         $ordersShowing = [];
+        $valuesToFetch = $this->fieldExtractor->extractValuesToFetch($configurationDb->getTextContent());
 
         if ($configurationDb->getThresholdType() === 0) {
-            $ordersShowing = $orderRepository->getWithMinutesLimit($store, $configurationDb->getThresholdMinutes());
+            $ordersShowing = $orderRepository->getWithMinutesLimit($store, $configurationDb->getThresholdMinutes(), $valuesToFetch);
         } else if ($configurationDb->getThresholdType() === 1) {
-            $ordersShowing = $orderRepository->getWithOrdersLimit($store, $configurationDb->getThresholdCount());
+            $ordersShowing = $orderRepository->getWithOrdersLimit($store, $configurationDb->getThresholdCount(), $valuesToFetch);
         }
 
         $ordersLength = sizeof($store->getOrders());
@@ -82,22 +81,22 @@ class ConfigurationController
             'fontSize' => $configurationDb->getFontSize(),
             'backgroundColor' => $configurationDb->getBackgroundColor(),
             'textColor' => $configurationDb->getTextColor(),
+            'textContent' => $configurationDb->getTextContent(),
+            'designTemplateId' => $configurationDb->getDesignTemplateId(),
+            "showThumbnail" => $configurationDb->isShowThumbnail(),
+            "thumbnailPosition" => $configurationDb->getThumbnailPosition(),
+            "verticalAlignment" => $configurationDb->getVerticalAlignment(),
+            "cornerRadius" => $configurationDb->getCornerRadius(),
+            "rtl" => $configurationDb->isRtl(),
             'initialDelay' => $configurationDb->getInitialDelay(),
             'delay' => $configurationDb->getDelay(),
             'duration' => $configurationDb->getDuration(),
-            'cornerStyle' => $configurationDb->getCornerStyle(),
             'position' => $configurationDb->getPosition(),
             'thresholdType' => $configurationDb->getThresholdType(),
             'thresholdMinutes' => $configurationDb->getThresholdMinutes(),
             'thresholdCount' => $configurationDb->getThresholdCount(),
             'loopOrders' => $configurationDb->isLoopOrders(),
             'shuffleOrders' => $configurationDb->isShuffleOrders(),
-            'hideTime' => $configurationDb->isHideTimeInOrders(),
-            'hideLocationInOrders' => $configurationDb->isHideLocationInOrders(),
-            'showThumbnail' => $configurationDb->isShowThumbnail(),
-            'showThumbnailPadding' => $configurationDb->isShowThumbnailPadding(),
-            'thumbnailPosition' => $configurationDb->getThumbnailPosition(),
-            'thumbnailSize' => $configurationDb->getThumbnailSize(),
         ];
 
         return new JsonResponse(json_encode($data, true), Response::HTTP_OK, [], true);

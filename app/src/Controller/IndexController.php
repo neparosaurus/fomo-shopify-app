@@ -8,6 +8,7 @@ use App\Message\ImportOrders;
 use App\Repository\ConfigurationRepository;
 use App\Repository\OrderRepository;
 use App\Repository\StoreRepository;
+use App\Service\FieldExtractorService;
 use App\Service\Shopify\Auth;
 use App\Service\Shopify\Context;
 use App\Service\Shopify\GraphQL\Webhook;
@@ -37,7 +38,7 @@ class IndexController extends AbstractController
             'reactRouting' => "^(?!api|_(profiler|wdt)|script|c|install|auth/callback|webhook)(sse/.*)?$",
         ],
     )]
-    public function index(Request $request, StoreRepository $storeRepository, ConfigurationRepository $configurationRepository, OrderRepository $orderRepository): Response
+    public function index(Request $request, StoreRepository $storeRepository, ConfigurationRepository $configurationRepository, OrderRepository $orderRepository, FieldExtractorService $fieldExtractor): Response
     {
         if (!Auth::isRequestVerified($request) || !Auth::authorizeStore($request, $storeRepository)) {
             return $this->redirectToRoute('app_install');
@@ -50,11 +51,12 @@ class IndexController extends AbstractController
         ]);
 
         $ordersShowing = [];
+        $valuesToFetch = $fieldExtractor->extractValuesToFetch($configuration->getTextContent());
 
         if ($configuration->getThresholdType() === 0) {
-            $ordersShowing = $orderRepository->getWithMinutesLimit(Context::getStore(), $configuration->getThresholdMinutes());
+            $ordersShowing = $orderRepository->getWithMinutesLimit(Context::getStore(), $configuration->getThresholdMinutes(), $valuesToFetch);
         } else if ($configuration->getThresholdType() === 1) {
-            $ordersShowing = $orderRepository->getWithOrdersLimit(Context::getStore(), $configuration->getThresholdCount());
+            $ordersShowing = $orderRepository->getWithOrdersLimit(Context::getStore(), $configuration->getThresholdCount(), $valuesToFetch);
         }
 
         $ordersLength = sizeof($store->getOrders());
@@ -70,22 +72,22 @@ class IndexController extends AbstractController
                 'fontSize' => $configuration->getFontSize(),
                 'backgroundColor' => $configuration->getBackgroundColor(),
                 'textColor' => $configuration->getTextColor(),
+                'textContent' => $configuration->getTextContent(),
+                'designTemplateId' => $configuration->getDesignTemplateId(),
+                'showThumbnail' => $configuration->isShowThumbnail(),
+                'thumbnailPosition' => $configuration->getThumbnailPosition(),
+                'verticalAlignment' => $configuration->getVerticalAlignment(),
+                'cornerRadius' => $configuration->getCornerRadius(),
+                'rtl' => $configuration->isRtl(),
                 'initialDelay' => $configuration->getInitialDelay(),
                 'delay' => $configuration->getDelay(),
                 'duration' => $configuration->getDuration(),
-                'cornerStyle' => $configuration->getCornerStyle(),
                 'position' => $configuration->getPosition(),
                 'thresholdType' => $configuration->getThresholdType(),
                 'thresholdMinutes' => $configuration->getThresholdMinutes(),
                 'thresholdCount' => $configuration->getThresholdCount(),
                 'loopOrders' => $configuration->isLoopOrders(),
                 'shuffleOrders' => $configuration->isShuffleOrders(),
-                'hideTimeInOrders' => $configuration->isHideTimeInOrders(),
-                'hideLocationInOrders' => $configuration->isHideLocationInOrders(),
-                'showThumbnail' => $configuration->isShowThumbnail(),
-                'showThumbnailPadding' => $configuration->isShowThumbnailPadding(),
-                'thumbnailPosition' => $configuration->getThumbnailPosition(),
-                'thumbnailSize' => $configuration->getThumbnailSize(),
             ],
         ]);
     }
