@@ -47,5 +47,5 @@
 /extension/extensions/*/build
 ###< extension ###
 
-/app/shopify.app.dewoid-toast.toml
+/app/shopify.app.toml
 /app/extensions/
